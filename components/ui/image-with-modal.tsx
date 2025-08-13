@@ -19,16 +19,18 @@ const ImageWithModal = ({ imageUrl, altText }: ImageWithModalProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center mb-4">
-      <h3
-        style={{
-          fontSize: "1.2rem",
-          color: "#444",
-          marginBottom: "10px",
-        }}
-      >
-        {altText}
-      </h3>
+    <div className="flex flex-col items-center justify-center mb-4 w-1/2">
+      <div className=" items-center justify-center mb-2">
+        <h3
+          style={{
+            fontSize: "1.2rem",
+            color: "#444",
+            marginBottom: "10px",
+          }}
+        >
+          {altText}
+        </h3>
+      </div>
       <img
         src={imageUrl}
         alt={altText}

@@ -2,7 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import DriverAllTable from "../../(tables)/tailwindui-table/user-table";
-import { useFetchAllPassengers, useFetchAllSolicitudes } from "@/hooks/use-fetch-driver-requirement";
+import {
+  useFetchAllPassengers,
+  useFetchAllSolicitudes,
+} from "@/hooks/use-fetch-driver-requirement";
 import UserTableStatus from "../../(tables)/tailwindui-table/clientes-table";
 
 const PassengerPage = () => {
@@ -19,7 +22,7 @@ const PassengerPage = () => {
         <div className="text-2xl font-medium">Administrar Clientes</div>
       </div>
       <div className="mt-5 text-2xl font-medium text-default-900">
-        <UserTableStatus drivers={passengers} />
+        <UserTableStatus users={passengers} />
       </div>
     </div>
   );

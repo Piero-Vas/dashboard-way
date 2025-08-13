@@ -23,13 +23,13 @@ const VehicleTableMarkModel = () => {
   const [loadingModels, setLoadingModels] = useState<number | null>(null);
 
   const refreshMakes = () => {
-    fetch(`http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/vehicle-make`)
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`)
       .then((res) => res.json())
       .then((data) => setMakes(data.data || []));
   };
 
   useEffect(() => {
-    fetch(`http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/vehicle-make`)
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`)
       .then((res) => res.json())
       .then((data) => setMakes(data.data || []));
   }, []);
@@ -42,7 +42,7 @@ const VehicleTableMarkModel = () => {
       if (!modelsByMake[id]) {
         setLoadingModels(id);
         const res = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/vehicle-model?makeId=${id}`
+          `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-model?makeId=${id}`
         );
         const data = await res.json();
         setModelsByMake((prev) => ({

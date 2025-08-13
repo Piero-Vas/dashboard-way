@@ -93,7 +93,7 @@ const LogInForm = () => {
       authType: "mobile",
     };
 
-    fetch(`http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/auth/login`, {
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/auth/login`, {
       method: "POST", // Método POST
       headers: {
         "Content-Type": "application/json",

@@ -11,17 +11,21 @@ import { headers } from "next/headers";
 import {
   Configs,
   Driver,
+  DriverResponse,
+  ResponseDataTrips,
   SolicitudCambiada,
+  TripById,
   User,
   Vehicle,
+  VehicleResponse,
 } from "@/types/user.interface";
-import { keyRide } from "@/app/[lang]/(dashboard)/(home)/constants";
+import { getAccessToken } from "@/app/[lang]/(dashboard)/(home)/constants";
 
 const apiController = "/driver-requirement";
 const apiRequests = "/driver";
 const apiRequestsUser = "/user";
 
-const token = keyRide;
+const token = getAccessToken();
 
 export const fetchDriverRequirements = async (): Promise<
   ApiResponse<DriverRequirement[]>
@@ -71,7 +75,34 @@ export const fetchAllPassengers = async (): Promise<ApiResponse<User[]>> => {
     params: {
       role: "passenger",
       page: 1,
-      limit: 10,
+      limit: 100,
+    },
+  });
+};
+
+export const fetchAllTripsByUser = async (
+  role: String,
+  id: number
+): Promise<ApiResponse<ResponseDataTrips>> => {
+  return apiClientGet<ApiResponse<ResponseDataTrips>>(`/trip/history`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: {
+      role: role,
+      userId: id,
+      page: 1,
+      limit: 100,
+    },
+  });
+};
+
+export const fetchAllTripsById = async (
+  id: string
+): Promise<ApiResponse<TripById>> => {
+  return apiClientGet<ApiResponse<TripById>>(`/trip/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
   });
 };
@@ -82,7 +113,7 @@ export const fetchAllDrivers = async (): Promise<ApiResponse<Driver[]>> => {
       Authorization: `Bearer ${token}`,
     },
     params: {
-      state: "INIT_VEHICLE",
+      state: "ACTIVE",
     },
   });
 };
@@ -99,6 +130,27 @@ export const fetchDataUserById = async (
   id: number
 ): Promise<ApiResponse<User>> => {
   return apiClientGet<ApiResponse<User>>(`${apiRequestsUser}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const fetchDataDriverById = async (
+  id: number
+): Promise<ApiResponse<DriverResponse>> => {
+  return apiClientGet<ApiResponse<DriverResponse>>(`/driver/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const fetchDataVehicleById = async (
+  id: number
+): Promise<ApiResponse<VehicleResponse>> => {
+  console.log("id", id);
+  return apiClientGet<ApiResponse<VehicleResponse>>(`/vehicle/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

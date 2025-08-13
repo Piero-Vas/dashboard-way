@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { keyRide } from "@/app/[lang]/(dashboard)/(home)/constants";
+import { getAccessToken } from "../../constants";
 
 type Make = { id: number; name: string };
 
@@ -11,6 +11,8 @@ interface Props {
   makes: Make[];
   refreshMakes: () => void;
 }
+
+const keyRide = getAccessToken();
 
 const VehicleMarkModelModals = ({ makes, refreshMakes }: Props) => {
   const [openMarca, setOpenMarca] = useState(false);
@@ -26,17 +28,14 @@ const VehicleMarkModelModals = ({ makes, refreshMakes }: Props) => {
   const handleAddMarca = async () => {
     if (!marcaNombre) return;
     setLoadingAdd(true);
-    await fetch(
-      `http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/vehicle-make`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${keyRide}`,
-        },
-        body: JSON.stringify({ name: marcaNombre }),
-      }
-    );
+    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${keyRide}`,
+      },
+      body: JSON.stringify({ name: marcaNombre }),
+    });
     setMarcaNombre("");
     setOpenMarca(false);
     setLoadingAdd(false);
@@ -47,17 +46,14 @@ const VehicleMarkModelModals = ({ makes, refreshMakes }: Props) => {
   const handleAddModelo = async () => {
     if (!modeloNombre || !marcaSeleccionada) return;
     setLoadingAdd(true);
-    await fetch(
-      `http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/vehicle-model`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${keyRide}`,
-        },
-        body: JSON.stringify({ name: modeloNombre, makeId: marcaSeleccionada }),
-      }
-    );
+    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-model`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${keyRide}`,
+      },
+      body: JSON.stringify({ name: modeloNombre, makeId: marcaSeleccionada }),
+    });
     setModeloNombre("");
     setMarcaSeleccionada(undefined);
     setOpenModelo(false);

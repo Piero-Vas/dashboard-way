@@ -57,7 +57,7 @@ const VerfiyForm = () => {
       <div className="2xl:text-lg text-base text-default-600 mt-2 leading-6">
         Enter the 6 figure confirmation code shown on the email
       </div>
-      <form className="mt-8">
+      {/* <form className="mt-8">
         <div className="flex flex-wrap  gap-1 lg:gap-6">
           {otpFields.map((index) => (
             <Input
@@ -85,7 +85,7 @@ const VerfiyForm = () => {
             Verify Now
           </Button>
         </div>
-      </form>
+      </form> */}
     </div>
   );
 };

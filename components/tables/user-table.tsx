@@ -1,58 +1,36 @@
 "use client";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import {
-  handleDelete,
-  handleStatusUpdate,
-} from "@/hooks/use-fetch-driver-requirement";
-import {
-  ActionModalDialog,
-  StatusDriverRequirement,
-  StatusRegisterDriver,
+    ActionModalDialog,
+    StatusRegisterDriver
 } from "@/lib/enums";
 import {
-  getIconModalDialog,
-  getStatusClass,
-  getStatusDriverRequirement,
+    getIconModalDialog
 } from "@/lib/utils";
+import { useTextStore } from "@/store";
 import { DriverRequestsTableProps } from "@/types/driver-request-table-props.interface";
 import { Icon } from "@iconify/react";
-import {
-  getActionsForStatus,
-  ModalDialog,
-} from "../helpers/driver-requirement-helper";
-import { columnsDriverRequestsTable } from "./data";
-import { Badge } from "../ui/badge";
 import Link from "next/link";
-import { useTextStore } from "@/store";
+import { Badge } from "../ui/badge";
+import { columnsDriverRequestsTable } from "./data";
 
 const DriverRequirementTable: React.FC<DriverRequestsTableProps> = ({
   driverRequirements,
@@ -137,11 +115,6 @@ const DriverRequirementTable: React.FC<DriverRequestsTableProps> = ({
                     <DropdownMenuSeparator />
                     {/* {getActionsForStatus(item.state, handleStatusUpdate, item)} */}
 
-                    {/* <ModalDialog
-                      item={item}
-                      action={ActionModalDialog.EDIT}
-                      disabled={false}
-                    /> */}
 
                     <Link
                       href={`/solicitudes/${item.id}`}

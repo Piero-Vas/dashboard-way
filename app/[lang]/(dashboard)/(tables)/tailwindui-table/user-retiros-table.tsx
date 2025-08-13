@@ -36,25 +36,10 @@ const UserRetirtosTable = () => {
 
   const retiros = [
     {
-      monto: "S/20",
-      fecha: "12/12/2024",
+      monto: "",
+      fecha: "",
     },
-    {
-      monto: "S/50",
-      fecha: "13/12/2024",
-    },
-    {
-      monto: "S/100",
-      fecha: "14/12/2024",
-    },
-    {
-      monto: "S/20",
-      fecha: "15/12/2024",
-    },
-    {
-      monto: "S/20",
-      fecha: "16/12/2024",
-    },
+
   ];
 
   return (

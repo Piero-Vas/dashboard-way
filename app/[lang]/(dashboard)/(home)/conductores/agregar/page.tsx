@@ -27,14 +27,14 @@ export default function RegistroConductor() {
   const nextStep = () => setStep((prev) => prev + 1);
   const prevStep = () => setStep((prev) => prev - 1);
 
-  const uploadImage = async (file) => {
-    if (!file) return;
-    const storageRef = ref(storage, `vehiculos/${file.name}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    setImageUrl(url);
-    setValue("vehicleImage", url);
-  };
+  //   const uploadImage = async (file) => {
+  //     if (!file) return;
+  //     const storageRef = ref(storage, `vehiculos/${file.name}`);
+  //     await uploadBytes(storageRef, file);
+  //     const url = await getDownloadURL(storageRef);
+  //     setImageUrl(url);
+  //     setValue("vehicleImage", url);
+  //   };
 
   return (
     <>

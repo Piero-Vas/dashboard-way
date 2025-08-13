@@ -1,6 +1,10 @@
 import { DriversRequests } from "./driver-requests";
 import { Driver, User } from "./user.interface";
 
-export interface UserRequestsTableProps {
+export interface DriverRequestsTableProps {
   drivers: Driver[];
+}
+
+export interface UserRequestsTableProps {
+  users: User[];
 }

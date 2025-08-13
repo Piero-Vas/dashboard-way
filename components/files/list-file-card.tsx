@@ -22,42 +22,41 @@ import Image from "next/image";
 import { type File } from "./view-files";
 
 const ListFileCard = ({ files }: { files: File[] }) => {
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  //   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  const handleSelectAll = (event: any) => {
-    if (selectedRows?.length === files?.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(files.map((row) => row.id));
-    }
-  };
+  //   const handleSelectAll = (event: any) => {
+  //     if (selectedRows?.length === files?.length) {
+  //       setSelectedRows([]);
+  //     } else {
+  //     //   setSelectedRows(files.map((row) => row.id));
+  //     }
+  //   };
 
-  const handleRowSelect = (id: string) => {
-    const updatedSelectedRows = [...selectedRows];
-    if (selectedRows.includes(id)) {
-      updatedSelectedRows.splice(selectedRows.indexOf(id), 1);
-    } else {
-      updatedSelectedRows.push(id);
-    }
-    setSelectedRows(updatedSelectedRows);
-  };
-  const selectEvenRows = () => {
-    const evenRowIds = files
-      .filter((_, index) => index % 2 !== 0)
-      .map((row) => row.id);
-    setSelectedRows(evenRowIds);
-  };
+  //   const handleRowSelect = (id: string) => {
+  //     const updatedSelectedRows = [...selectedRows];
+  //     if (selectedRows.includes(id)) {
+  //       updatedSelectedRows.splice(selectedRows.indexOf(id), 1);
+  //     } else {
+  //       updatedSelectedRows.push(id);
+  //     }
+  //     setSelectedRows(updatedSelectedRows);
+  //   };
+  //   const selectEvenRows = () => {
+  //     const evenRowIds = files
+  //       .filter((_, index) => index % 2 !== 0)
+  //     //   .map((row) => row.id);
+  //     // setSelectedRows(evenRowIds);
+  //   };
 
-  const selectOddRows = () => {
-    const oddRowIds = files
-      .filter((_, index) => index % 2 === 0)
-      .map((row) => row.id);
-    setSelectedRows(oddRowIds);
-  };
+  // //   const selectOddRows = () => {
+  // //     const oddRowIds = files
+  // //       .filter((_, index) => index % 2 === 0)
+  // //       .map((row) => row.id);
+  // //     setSelectedRows(oddRowIds);
+  // //   };
   return (
-
     <div className="w-full h-[calc(100vh-180px)] overflow-auto no-scrollbar">
-      <Table>
+      {/* <Table>
         <TableHeader>
           <TableRow>
             <TableHead>
@@ -142,7 +141,7 @@ const ListFileCard = ({ files }: { files: File[] }) => {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </Table> */}
     </div>
   );
 };

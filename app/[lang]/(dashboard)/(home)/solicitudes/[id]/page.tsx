@@ -8,7 +8,7 @@ import { data } from "../../ecommerce/components/orders/data";
 import { updateDataSolicitudes } from "@/services/driver-requirement.service";
 import { use, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { keyRide } from "../../constants";
+import { getAccessToken } from "../../constants";
 type DriverApiResponse = {
   status: string;
   data: DriverData;
@@ -73,6 +73,8 @@ type VehicleApiResponse = {
     insuranceTrafficAccidentsUrl: string;
   };
 };
+
+const keyRide = getAccessToken();
 const SolicitudPage = () => {
   const params = useParams();
   const idDriver = params.id as string;
@@ -108,23 +110,20 @@ const SolicitudPage = () => {
   useEffect(() => {
     if (!idDriver) return;
     setLoadingDriver(true);
-    fetch(
-      `http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/driver/${idDriver}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/driver/${idDriver}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then((data: DriverApiResponse) => {
         setDriverData(data.data);
         if (data.data?.userId) {
           setLoadingUser(true);
           fetch(
-            `http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/user/${data.data.userId}`,
+            `${process.env.NEXT_PUBLIC_SITE_URL}/user/${data.data.userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -143,7 +142,7 @@ const SolicitudPage = () => {
     if (!driverData?.vehicleId) return;
     setLoadingVehicle(true);
     fetch(
-      `http://${process.env.NEXT_PUBLIC_SITE_URL}/api/1.0/vehicle/${driverData.vehicleId}`,
+      `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle/${driverData.vehicleId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -437,21 +436,21 @@ const SolicitudPage = () => {
               </div>
               <div className="flex justify-around">
                 <ImageWithModal
-                  imageUrl={userData?.profilePictureUrl}
+                  imageUrl={userData?.profilePictureUrl!}
                   altText="Foto de perfil"
                 />
                 <ImageWithModal
-                  imageUrl={driverData?.identityDocumentUrl}
+                  imageUrl={driverData?.identityDocumentUrl!}
                   altText="Documento de identidad"
                 />
               </div>
               <div className="flex justify-around">
                 <ImageWithModal
-                  imageUrl={driverData?.driverLicenseUrl}
+                  imageUrl={driverData?.driverLicenseUrl!}
                   altText="Licencia de conducir"
                 />
                 <ImageWithModal
-                  imageUrl={driverData?.criminalRecordUrl}
+                  imageUrl={driverData?.criminalRecordUrl!}
                   altText="Antecedentes penales"
                 />
               </div>

@@ -114,6 +114,7 @@ const ListItem = React.forwardRef<HTMLAnchorElement, any>(
           " select-none   text-base  font-medium text-default-600 rounded-md flex  items-center gap-2 mb-4 last:mb-0  leading-none no-underline outline-none transition-colors  hover:text-primary  focus:text-primary",
           className
         )}
+        href={childItem.href}
         {...props}
         ref={forwardedRef}
       >

@@ -1,7 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { ActionModalDialog, StatusDriverRequirement, StatusRegisterDriver } from "./enums";
-import { Translations } from "./interface";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

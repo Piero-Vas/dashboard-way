@@ -4,7 +4,9 @@ import {
   fetchAllConfigs,
   fetchAllDrivers,
   fetchAllPassengers,
+  fetchDataDriverById,
   fetchDataUserById,
+  fetchDataVehicleById,
   fetchDriverAllRequests,
   fetchDriverRequirementById,
   fetchDriverRequirements,
@@ -14,8 +16,14 @@ import {
 import { DriverRequirement } from "@/types/driver-requirement.interface";
 import { StatusDriverRequirement } from "@/lib/enums";
 import { DriversRequests } from "@/types/driver-requests";
-import { Configs, Driver, User } from "@/types/user.interface";
-import config from '../tailwind.config';
+import {
+  Configs,
+  Driver,
+  DriverResponse,
+  User,
+  VehicleResponse,
+} from "@/types/user.interface";
+import config from "../tailwind.config";
 
 export const useFetchDriverRequirements = () => {
   const [driverRequirements, setDriverRequirements] = useState<
@@ -128,29 +136,29 @@ export const useFetchAllDrivers = () => {
 };
 
 export const useFetchAllConfigs = () => {
-    const [configs, setConfigs] = useState<Configs[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<null | string>(null);
-    useEffect(() => {
-      const loadDriverRequirement = async () => {
-        setLoading(true);
-        try {
-          const data = await fetchAllConfigs();
-          console.log(data.data);
-          setConfigs(data.data);
-        } catch (err) {
-          console.error("Failed to fetch solicitudes:", err);
-          setError("Failed to load solicitudes");
-        } finally {
-          setLoading(false);
-        }
-      };
+  const [configs, setConfigs] = useState<Configs[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<null | string>(null);
+  useEffect(() => {
+    const loadDriverRequirement = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchAllConfigs();
+        console.log(data.data);
+        setConfigs(data.data);
+      } catch (err) {
+        console.error("Failed to fetch solicitudes:", err);
+        setError("Failed to load solicitudes");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      loadDriverRequirement();
-    }, []);
+    loadDriverRequirement();
+  }, []);
 
-    return { configs, loading, error };
-  };
+  return { configs, loading, error };
+};
 
 export const useFetchAllPassengers = () => {
   const [passengers, setPassengers] = useState<User[]>([]);
@@ -175,6 +183,84 @@ export const useFetchAllPassengers = () => {
   }, []);
 
   return { passengers, loading, error };
+};
+
+export const useFetchGetUserById = (id: number) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<null | string>(null);
+
+  useEffect(() => {
+    const fetchUserById = async (id: number) => {
+      setLoading(true);
+      try {
+        const data = await fetchDataUserById(id);
+        console.log("Datos usuario:", data);
+        setUser(data.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+        setError("Failed to load user");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserById(id);
+  }, [id]);
+
+  return { user, loading, error };
+};
+
+export const useFetchGetDriverById = (id: number) => {
+  const [driver, setDriver] = useState<DriverResponse>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<null | string>(null);
+
+  useEffect(() => {
+    const fetchUserById = async (id: number) => {
+      setLoading(true);
+      try {
+        const data = await fetchDataDriverById(id);
+        console.log("Datos conductor:", data);
+        setDriver(data.data);
+      } catch (err) {
+        console.error("Failed to fetch driver:", err);
+        setError("Failed to load driver");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserById(id);
+  }, [id]);
+
+  return { driver, loading, error };
+};
+
+export const useFetchVehicleById = (id: number) => {
+  const [vehicle, setVehicle] = useState<VehicleResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<null | string>(null);
+
+  useEffect(() => {
+    const fetchUserById = async (id: number) => {
+      setLoading(true);
+      try {
+        const data = await fetchDataVehicleById(id);
+        console.log("Datos vehículo:", data);
+        setVehicle(data.data);
+      } catch (err) {
+        console.error("Failed to fetch driver:", err);
+        setError("Failed to load driver");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserById(id);
+  }, [id]);
+
+  return { vehicle, loading, error };
 };
 
 export const useFetchAllSolicitudes = () => {

@@ -43,11 +43,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserRequestsTableProps } from "@/types/user-request.table-props.interface";
+import { DriverRequestsTableProps } from "@/types/user-request.table-props.interface";
 import Link from "next/link";
 import { useState } from "react";
 
-const PaymentTable: React.FC<UserRequestsTableProps> = ({
+const PaymentTable: React.FC<DriverRequestsTableProps> = ({
   drivers: drivers,
 }) => {
   const columns: { key: string; label: string }[] = [

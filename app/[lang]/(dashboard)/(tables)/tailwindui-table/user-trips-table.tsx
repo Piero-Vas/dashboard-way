@@ -23,7 +23,9 @@ import {
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
-const UserTripTable = () => {
+import { useFetchAllTripsByUser } from "@/hooks/use-fetch-user-requirement";
+import { Trip } from "@/types/user.interface";
+const UserTripTable = ({ id, role }: { id: number; role: string }) => {
   const columns: { key: string; label: string }[] = [
     {
       key: "inicio",
@@ -47,26 +49,11 @@ const UserTripTable = () => {
     },
   ];
 
-  const trips = [
-    {
-      inicio: "Av. Gral. Córdova 441",
-      fin: "Miraflores 332",
-      monto: "S/25",
-      fecha: "12/12/2024",
-    },
-    {
-      //   inicio: "Av. Gral. Córdova 441",
-      fin: "Miraflores 332",
-      monto: "S/25",
-      fecha: "12/12/2024",
-    },
-    {
-      inicio: "Av. Gral. Córdova 441",
-      fin: "Miraflores 332",
-      //   monto: "S/25",
-      fecha: "12/12/2024",
-    },
-  ];
+  const {
+    trips,
+    loading: loadingTrips,
+    error: errorTrips,
+  } = useFetchAllTripsByUser(Number(id), role);
 
   return (
     <Card>
@@ -79,19 +66,26 @@ const UserTripTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {trips.map((item) => (
-            <TableRow key={item.inicio}>
+          {trips?.trips.map((item: Trip) => (
+            <TableRow key={item.pickupLocation.name}>
               <TableCell className="font-medium  text-card-foreground/80">
-                {item.inicio}
+                {item.pickupLocation.name}
               </TableCell>
               <TableCell className="font-medium  text-card-foreground/80">
-                {item.fin}
+                {item.dropoffLocations[0].name}
               </TableCell>
 
-              <TableCell className="ltr:pr-5 rtl:pl-5"> {item.monto}</TableCell>
-              <TableCell>{item.fecha}</TableCell>
               <TableCell className="ltr:pr-5 rtl:pl-5">
-                <Link href="/1/viajes">
+                {" "}
+                {item.amount}
+              </TableCell>
+              <TableCell>{item.createdAt.split("T")[0]}</TableCell>
+              <TableCell className="ltr:pr-5 rtl:pl-5">
+                <Link
+                  href={`/viajes/${item.id}?createdAt=${encodeURIComponent(
+                    item.createdAt
+                  )}`}
+                >
                   <Button
                     size="icon"
                     variant="outline"

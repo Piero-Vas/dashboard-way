@@ -26,12 +26,12 @@ const TailwindUiTable = () => {
         </div>
         <SimpleTable />
       </Card>
-      <Card title="User table in Card">
+      {/* <Card title="User table in Card">
         <DriverAllTable />
       </Card>
       <Card title="With avatars content">
         <UserTableStatus />
-      </Card>
+      </Card> */}
       <Card title="Collapsible Table">
         <div className="flex flex-wrap items-center gap-4 mb-1">
           <div className="flex-1">

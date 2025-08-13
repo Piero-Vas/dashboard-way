@@ -18,7 +18,6 @@ const pagoSchema = z
     metodoPago: z.enum(["Efectivo", "Tarjeta"]),
     numeroCuenta: z
       .string()
-      .min(1, "El número de cuenta es obligatorio")
       .optional(),
     archivo: z.instanceof(File, { message: "El archivo es obligatorio" }),
     comentarios: z
@@ -71,6 +70,8 @@ const PagosManualScreen = () => {
     nombre: "",
     monto: parseFloat(totalGanancias),
     metodoPago: "",
+    numeroCuenta: "",
+    archivo: null as File | null,
     comentarios: "",
   });
 
