@@ -8,31 +8,72 @@ import { themes } from "@/config/thems";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import DashboardSelect from "@/components/dasboard-select";
 import { cn } from "@/lib/utils";
+import { useFetchUserCount } from "@/hooks/use-fetch-dashboard";
 
-const allUsersSeries = [
-  {
-    data: [0, 0, 2, 0, 0, 1, 0, 5, 0, 2],
-  },
-];
-const conversationSeries = [
-  {
-    data: [80, 70, 65, 40, 40, 100, 100, 75, 60, 80],
-  },
-];
-const eventCountSeries = [
-  {
-    data: [20, 70, 65, 60, 40, 60, 90, 75, 60, 40],
-  },
-];
-const newUserSeries = [
-  {
-    data: [20, 70, 65, 40, 100, 60, 100, 75, 60, 80],
-  },
-];
 const ReportsSnapshot = () => {
   const { theme: config, setTheme: setConfig } = useThemeStore();
   const { theme: mode } = useTheme();
   const theme = themes.find((theme) => theme.name === config);
+
+  const { monthlySignups, loading, error } = useFetchUserCount("passenger");
+
+  const {
+    monthlySignups: driverSignups,
+    loading: driverLoading,
+    error: driverError,
+  } = useFetchUserCount("driver");
+
+  if (loading || driverLoading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (error || driverError) {
+    return <div>Error: {error || driverError}</div>;
+  }
+
+  console.log("Drivers", driverSignups);
+  console.log("Passengers", monthlySignups);
+
+  const driversData = Array.from({ length: 12 }, (_, i) => {
+    const found = driverSignups.find(
+      (item) => Number(item.month) === i + 1 && item.year === "2025"
+    );
+    return found ? found.userCount : 0;
+  });
+
+  const customersData = Array.from({ length: 12 }, (_, i) => {
+    const found = monthlySignups.find(
+      (item) => Number(item.month) === i + 1 && item.year === "2025"
+    );
+    return found ? found.userCount : 0;
+  });
+
+  const allUsersData = driversData.map((val, idx) => val + customersData[idx]);
+
+  const allUsersSeries = [
+    {
+      data: allUsersData,
+    },
+  ];
+  const drivers = [
+    {
+      data: driversData,
+    },
+  ];
+  const customers = [
+    {
+      data: customersData,
+    },
+  ];
+  const admins = [
+    {
+      data: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+    },
+  ];
+
+  const allUsersTotal = allUsersData.reduce((acc, val) => acc + val, 0);
+  const driversTotal = driversData.reduce((acc, val) => acc + val, 0);
+  const customersTotal = customersData.reduce((acc, val) => acc + val, 0);
 
   const primary = `hsl(${
     theme?.cssVars[mode === "dark" ? "dark" : "light"].primary
@@ -51,19 +92,19 @@ const ReportsSnapshot = () => {
     {
       value: "all",
       text: "Todos los Usuarios",
-      total: "10",
+      total: allUsersTotal.toString(),
       color: "primary",
     },
     {
       value: "event",
       text: "Conductores",
-      total: "2",
+      total: driversTotal.toString(),
       color: "warning",
     },
     {
       value: "conversation",
       text: "Clientes",
-      total: "7",
+      total: customersTotal.toString(),
       color: "success",
     },
     {
@@ -81,17 +122,17 @@ const ReportsSnapshot = () => {
     },
     {
       value: "event",
-      series: eventCountSeries,
+      series: drivers,
       color: warning,
     },
     {
       value: "conversation",
-      series: conversationSeries,
+      series: customers,
       color: success,
     },
     {
       value: "newuser",
-      series: newUserSeries,
+      series: admins,
       color: info,
     },
   ];

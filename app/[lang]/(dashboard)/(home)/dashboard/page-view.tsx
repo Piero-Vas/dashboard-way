@@ -38,7 +38,7 @@ const DashboardPageView = ({ trans }: DashboardPageViewProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ReportsArea />
         </div>
-        <Card>
+        {/* <Card>
           <CardHeader className="border-none p-6 pt-5 mb-0">
             <CardTitle className="text-lg font-semibold text-default-900 p-0">
               Nuevos vs Antiguos Usuarios
@@ -47,7 +47,7 @@ const DashboardPageView = ({ trans }: DashboardPageViewProps) => {
           <CardContent>
             <UserStats />
           </CardContent>
-        </Card>
+        </Card> */}
         {/* <Card>
           <CardHeader className="border-none p-6 pt-5 mb-0">
             <CardTitle className="text-lg font-semibold text-default-900 p-0">

@@ -1,6 +1,10 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ActionModalDialog, StatusDriverRequirement, StatusRegisterDriver } from "./enums";
+import {
+  ActionModalDialog,
+  StatusDriverRequirement,
+  StatusRegisterDriver,
+} from "./enums";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -208,4 +212,20 @@ export const getIconModalDialog = (action: ActionModalDialog): string => {
     default:
       return "";
   }
+};
+
+export const getReportStats = (
+  statusCounts: any,
+  key: string
+): { count: number; rate: string; isUp: boolean } => {
+  const count = statusCounts?.[key]?.last30Days ?? 0;
+  const prev = statusCounts?.[key]?.["31To60Days"] ?? 0;
+  const rate =
+    prev === 0 ? (count === 0 ? 0 : 100) : ((count - prev) / prev) * 100;
+  const isUp = count >= prev;
+  return {
+    count,
+    rate: rate.toFixed(2),
+    isUp,
+  };
 };
