@@ -41,6 +41,7 @@ import {
   LucideIcon,
   CustomIcon,
   Mail,
+  Settings,
 } from "@/components/svg";
 
 export interface MenuItemProps {
@@ -2030,11 +2031,6 @@ export const menusConfig = {
             href: "/conductores",
             icon: Cart,
           },
-        //   {
-        //     title: "Administradores",
-        //     href: "/admins",
-        //     icon: ClipBoard,
-        //   },
           {
             title: "Solicitudes",
             href: "/solicitudes",
@@ -2051,7 +2047,6 @@ export const menusConfig = {
       {
         title: "Vehiculos",
         icon: Cart,
-
         child: [
           {
             title: "Marca / Modelo",
@@ -2066,11 +2061,16 @@ export const menusConfig = {
           },
         ],
       },
-    //   {
-    //     title: "Incidencias",
-    //     icon: Flag,
-    //     href: "/chat",
-    //   },
+      {
+        title: "Configuracion App",
+        icon: Settings,
+        href: "/configuracion-app",
+      },
+      //   {
+      //     title: "Incidencias",
+      //     icon: Flag,
+      //     href: "/chat",
+      //   },
       //   {
       //     isHeader: true,
       //     title: "Application",

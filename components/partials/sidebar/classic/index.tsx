@@ -99,8 +99,6 @@ const ClassicSidebar = ({ trans }: { trans: string }) => {
         >
           {menus.map((item, i) => (
             <li key={`menu_key_${i}`}>
-              {/* single menu  */}
-
               {!item.child && (
                 <SingleMenuItem
                   item={item}
@@ -111,9 +109,9 @@ const ClassicSidebar = ({ trans }: { trans: string }) => {
               )}
 
               {/* menu label */}
-              { !item.child && (!collapsed || hovered) && (
+              {/* { !item.child && (!collapsed || hovered) && (
                 <MenuLabel item={item} trans={trans} />
-              )}
+              )} */}
 
               {/* sub menu */}
               {item.child && (
