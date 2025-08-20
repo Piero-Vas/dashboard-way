@@ -37,7 +37,7 @@ export const fetchDriverAllRequests = async (): Promise<
   ApiResponse<DriversRequests[]>
 > => {
   return apiClientGet<ApiResponse<DriversRequests[]>>(
-    `${apiRequests}?state=INIT_VEHICLE`,
+    `${apiRequests}?state=PENDING`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -55,16 +55,22 @@ export const fetchAllVehicles = async (): Promise<ApiResponse<Vehicle[]>> => {
 };
 
 export const updateDataSolicitudes = async (
-  id: number
-): Promise<ApiResponse<SolicitudCambiada[]>> => {
-  return apiClientPatch<ApiResponse<SolicitudCambiada[]>>(`/driver/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    data: {
-      state: "ACTIVE",
-    },
-  });
+  id: string
+): Promise<ApiResponse<SolicitudCambiada>> => {
+  console.log("id", id);
+  const dataSend = {
+    state: "ACTIVE",
+  };
+
+  return apiClientPatch<ApiResponse<SolicitudCambiada>>(
+    `/driver/${id}`,
+    dataSend,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 };
 
 export const fetchAllPassengers = async (): Promise<ApiResponse<User[]>> => {

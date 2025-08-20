@@ -1,32 +1,28 @@
 "use client";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import {
-    ActionModalDialog,
-    StatusRegisterDriver
-} from "@/lib/enums";
-import {
-    getIconModalDialog
-} from "@/lib/utils";
+import { ActionModalDialog, StatusRegisterDriver } from "@/lib/enums";
+import { getIconModalDialog } from "@/lib/utils";
 import { useTextStore } from "@/store";
 import { DriverRequestsTableProps } from "@/types/driver-request-table-props.interface";
+import { DriversRequests } from "@/types/driver-requests";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { Badge } from "../ui/badge";
@@ -35,23 +31,6 @@ import { columnsDriverRequestsTable } from "./data";
 const DriverRequirementTable: React.FC<DriverRequestsTableProps> = ({
   driverRequirements,
 }) => {
-  const setName = useTextStore((state: any) => state.setName);
-  const setLastName = useTextStore((state: any) => state.setLastName);
-  const setIdentityDocumentUrl = useTextStore(
-    (state: any) => state.setIdentityDocumentUrl
-  );
-  const setDriverLicenseUrl = useTextStore(
-    (state: any) => state.setDriverLicenseUrl
-  );
-  const setCriminalRecordUrl = useTextStore(
-    (state: any) => state.setCriminalRecordUrl
-  );
-  const setVehicleId = useTextStore((state: any) => state.setVehicleId);
-  const setProfilePictureUrl = useTextStore(
-    (state: any) => state.setProfilePictureUrl
-  );
-  const setId = useTextStore((state: any) => state.setId);
-  const setEmail = useTextStore((state: any) => state.setEmail);
   return (
     <Card>
       <Table>
@@ -63,13 +42,22 @@ const DriverRequirementTable: React.FC<DriverRequestsTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {driverRequirements.map((item, index) => (
+          {driverRequirements.map((item: DriversRequests, index) => (
             <TableRow key={`${item.userId}-${index}`}>
               <TableCell className=" font-medium  text-card-foreground/80">
                 <div className="flex gap-3 items-center">
                   <Avatar className="rounded-lg">
-                    <AvatarImage src={""} />
-                    {/* <AvatarFallback>{item.firstName.charAt(0) + item.lastName.charAt(0)}</AvatarFallback> */}
+                    <AvatarImage
+                      src={
+                        item.userInfo?.profilePictureUrl != null
+                          ? item.userInfo?.profilePictureUrl
+                          : ""
+                      }
+                    />
+                    <AvatarFallback>
+                      {item.userInfo!.firstName.charAt(0) +
+                        item.userInfo!.lastName.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                 </div>
               </TableCell>
@@ -113,23 +101,8 @@ const DriverRequirementTable: React.FC<DriverRequestsTableProps> = ({
                   <DropdownMenuContent align="end" avoidCollisions>
                     <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {/* {getActionsForStatus(item.state, handleStatusUpdate, item)} */}
 
-
-                    <Link
-                      href={`/solicitudes/${item.id}`}
-                      onClick={() => {
-                        setName(item.userInfo?.firstName);
-                        setLastName(item.userInfo?.lastName);
-                        setIdentityDocumentUrl(item.identityDocumentUrl);
-                        setDriverLicenseUrl(item.driverLicenseUrl);
-                        setCriminalRecordUrl(item.criminalRecordUrl);
-                        setVehicleId(item.vehicleId);
-                        setProfilePictureUrl(item.userInfo?.profilePictureUrl);
-                        setEmail(item.userInfo?.email);
-                        setId(item.id);
-                      }}
-                    >
+                    <Link href={`/solicitudes/${item.id}`}>
                       <DropdownMenuItem preventClose>
                         <Icon
                           icon={getIconModalDialog(ActionModalDialog.VIEW)}
@@ -138,41 +111,6 @@ const DriverRequirementTable: React.FC<DriverRequestsTableProps> = ({
                         {ActionModalDialog.VIEW}
                       </DropdownMenuItem>
                     </Link>
-
-                    {/* <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <DropdownMenuItem preventClose>
-                          <Icon
-                            icon="heroicons:trash"
-                            className=" h-4 w-4 mr-2 "
-                          />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            ¿Estás completamente seguro?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Eliminará
-                            permanentemente su cuenta y eliminará sus datos de
-                            nuestros servidores.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className=" bg-secondary">
-                            Cancelar
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(item.id)}
-                            className="bg-destructive hover:bg-destructive/80"
-                          >
-                            Confirmar
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog> */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

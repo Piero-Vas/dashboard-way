@@ -1,8 +1,6 @@
 "use client";
 
-import DriverRequirementTable from "@/components/tables/user-table";
 import VechilesTable from "@/components/tables/vehicles.table";
-import { useFetchDriverRequirements } from "@/hooks/use-fetch-driver-requirement";
 import { useFetchAllVehicle } from "@/hooks/user-fetch-vehicle";
 
 const DriversPage = () => {

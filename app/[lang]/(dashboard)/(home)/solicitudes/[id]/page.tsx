@@ -2,12 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ImageWithModal from "@/components/ui/image-with-modal";
+import { updateDataSolicitudes } from "@/services/driver-requirement.service";
 import { useTextStore } from "@/store";
 import Link from "next/link";
-import { data } from "../../ecommerce/components/orders/data";
-import { updateDataSolicitudes } from "@/services/driver-requirement.service";
-import { use, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { getAccessToken } from "../../constants";
 type DriverApiResponse = {
   status: string;
@@ -17,6 +16,7 @@ type DriverApiResponse = {
 type DriverData = {
   userId: number;
   identityDocumentUrl: string;
+  identityDocumentReverseUrl: string;
   driverLicenseUrl: string;
   criminalRecordUrl: string;
   vehicleId: number;
@@ -70,6 +70,8 @@ type VehicleApiResponse = {
     vehicleColor: string;
     state: string;
     vehiclePhotoUrl: string;
+    sideVehiclePhotoUrl: string;
+    backVehiclePhotoUrl: string;
     insuranceTrafficAccidentsUrl: string;
   };
 };
@@ -90,22 +92,6 @@ const SolicitudPage = () => {
     VehicleApiResponse["data"] | null
   >(null);
   const [loadingVehicle, setLoadingVehicle] = useState(true);
-
-  const name = useTextStore((state: any) => state.name);
-  const lastName = useTextStore((state: any) => state.lastName);
-  const identityDocumentUrl = useTextStore(
-    (state: any) => state.identityDocumentUrl
-  );
-  const driverLicenseUrl = useTextStore((state: any) => state.driverLicenseUrl);
-  const criminalRecordUrl = useTextStore(
-    (state: any) => state.criminalRecordUrl
-  );
-  const vehicleId = useTextStore((state: any) => state.vehicleId);
-  const profilePictureUrl = useTextStore(
-    (state: any) => state.profilePictureUrl
-  );
-  const email = useTextStore((state: any) => state.email);
-  const id = useTextStore((state: any) => state.id);
 
   useEffect(() => {
     if (!idDriver) return;
@@ -153,6 +139,10 @@ const SolicitudPage = () => {
       .then((data: VehicleApiResponse) => setVehicleData(data.data))
       .finally(() => setLoadingVehicle(false));
   }, [driverData?.vehicleId]);
+
+  console.log("driverData", driverData);
+
+  console.log(vehicleData);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
@@ -238,10 +228,12 @@ const SolicitudPage = () => {
                 color="success"
                 size={"xl"}
                 onClick={async () => {
-                  console.log("id", id);
+                  console.log("id", idDriver);
                   try {
-                    const data = await updateDataSolicitudes(id);
-                    console.log("data", data);
+                    const data = await updateDataSolicitudes(idDriver);
+                    if (data.status === "success") {
+                      window.location.href = "/solicitudes";
+                    }
                   } catch (err) {
                     console.error(" error", err);
                   } finally {
@@ -446,9 +438,15 @@ const SolicitudPage = () => {
               </div>
               <div className="flex justify-around">
                 <ImageWithModal
+                  imageUrl={driverData?.identityDocumentReverseUrl!}
+                  altText="Documento de identidad (Reversa)"
+                />
+                <ImageWithModal
                   imageUrl={driverData?.driverLicenseUrl!}
                   altText="Licencia de conducir"
                 />
+              </div>
+              <div className="flex justify-around">
                 <ImageWithModal
                   imageUrl={driverData?.criminalRecordUrl!}
                   altText="Antecedentes penales"
