@@ -72,7 +72,7 @@ const ProfileInfo = () => {
             {
               name: "Settings",
               icon: "heroicons:adjustments-horizontal",
-              href: "/configs",
+              href: "/configuracion-app",
             },
             // {
             //   name: "Keyboard shortcuts",

@@ -18,7 +18,7 @@ export default function ConfigPage() {
 
   return (
     <div className=" ">
-      <main className="p-6">
+      {/* <main className="p-6">
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">
             Configuración
@@ -55,7 +55,7 @@ export default function ConfigPage() {
             </div>
           </div>
         </section>
-      </main>
+      </main> */}
     </div>
   );
 }
