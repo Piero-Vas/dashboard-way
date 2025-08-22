@@ -5,6 +5,7 @@ import {
   StatusDriverRequirement,
   StatusRegisterDriver,
 } from "./enums";
+import { Action } from "@radix-ui/react-toast";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -209,6 +210,8 @@ export const getIconModalDialog = (action: ActionModalDialog): string => {
       return "heroicons:pencil";
     case ActionModalDialog.VIEW:
       return "heroicons:eye";
+    case ActionModalDialog.DELETE:
+      return "heroicons:trash";
     default:
       return "";
   }

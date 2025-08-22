@@ -8,6 +8,7 @@ export enum ActionModalDialog {
   CREATE = "Crear",
   EDIT = "Editar",
   VIEW = "Ver",
+  DELETE = "Eliminar",
 }
 
 export enum StatusRegisterDriver {

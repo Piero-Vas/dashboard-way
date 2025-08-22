@@ -1,18 +1,25 @@
 import { Role } from "@/lib/enums";
-import { S } from "@fullcalendar/core/internal-common";
 
 export interface User {
   id: number;
-  mobile: String;
-  email: String;
-  firstName: String;
-  lastName: String;
+  mobile: string;
+  email: string;
+  firstName: string;
+  lastName: string;
   latitude: null | number;
   longitude: null | number;
   userRoles: Role[];
   ratingAveragePassenger: number;
   ratingAverageDriver: number;
   profilePictureUrl: null | string;
+}
+
+export interface EditableUserData {
+  mobile: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profilePictureUrl: string;
 }
 
 export interface Driver {

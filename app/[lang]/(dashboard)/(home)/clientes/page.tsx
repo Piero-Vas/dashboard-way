@@ -1,11 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import DriverAllTable from "../../(tables)/tailwindui-table/user-table";
-import {
-  useFetchAllPassengers,
-  useFetchAllSolicitudes,
-} from "@/hooks/use-fetch-driver-requirement";
+import { useFetchAllPassengers } from "@/hooks/use-fetch-driver-requirement";
 import UserTableStatus from "../../(tables)/tailwindui-table/clientes-table";
 
 const PassengerPage = () => {

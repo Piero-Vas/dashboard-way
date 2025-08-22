@@ -29,6 +29,7 @@ const schema = z.object({
   password: z.string().min(4),
 });
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { app } from "@/firebaseClient";
 
 const LogInForm = () => {
   const [isPending, startTransition] = React.useTransition();
@@ -57,18 +58,6 @@ const LogInForm = () => {
   });
   const [isVisible, setIsVisible] = React.useState(false);
 
-  const toggleVisibility = () => setIsVisible(!isVisible);
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDM21AJnL8ewQJL5eBo5tCcbHVBDmEXfZI",
-    authDomain: "wayapps-81989.firebaseapp.com",
-    projectId: "wayapps-81989",
-    storageBucket: "wayapps-81989.firebasestorage.app",
-    messagingSenderId: "530130091566",
-    appId: "1:530130091566:web:c05efda8ef5f390d8ee9bf",
-    measurementId: "G-K007K21KFQ",
-  };
-  const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const onSubmit = async (dataLogin: { email: string; password: string }) => {
     console.log("data", dataLogin);

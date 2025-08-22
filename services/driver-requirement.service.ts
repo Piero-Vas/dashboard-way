@@ -12,6 +12,7 @@ import {
   Configs,
   Driver,
   DriverResponse,
+  EditableUserData,
   ResponseDataTrips,
   SolicitudCambiada,
   TripById,
@@ -20,6 +21,7 @@ import {
   VehicleResponse,
 } from "@/types/user.interface";
 import { getAccessToken } from "@/app/[lang]/(dashboard)/(home)/constants";
+import { UserEditForm } from "../app/[lang]/(dashboard)/(home)/clientes/components/user-edit-form";
 
 const apiController = "/driver-requirement";
 const apiRequests = "/driver";
@@ -140,6 +142,33 @@ export const fetchDataUserById = async (
       Authorization: `Bearer ${token}`,
     },
   });
+};
+
+export const fetchUpdateDataUserById = async (
+  user: EditableUserData,
+  id: number
+): Promise<ApiResponse<User>> => {
+  const dataSend = {
+    mobile: user.mobile,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    profilePictureUrl: user.profilePictureUrl,
+  };
+
+  return apiClientPatch<ApiResponse<User>>(
+    `${apiRequestsUser}/${id}`,
+    dataSend,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};
+
+export const fetchDeleteDataUserById = async (id: number) => {
+  return apiClientDelete(`${apiRequestsUser}/${id}`);
 };
 
 export const fetchDataDriverById = async (
