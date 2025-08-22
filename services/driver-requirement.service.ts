@@ -204,7 +204,6 @@ export const fetchUpdateDataDriverById = async (
 export const fetchDataVehicleById = async (
   id: number
 ): Promise<ApiResponse<VehicleResponse>> => {
-  console.log("id", id);
   return apiClientGet<ApiResponse<VehicleResponse>>(`/vehicle/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,

@@ -76,10 +76,24 @@ export interface Vehicle {
   plateNumber: String;
   vehicleType: String;
   tripClasses: String[];
-  vehicleColor: String;
-  state: String;
-  vehiclePhotoUrl: String;
-  insuranceTrafficAccidentsUrl: String;
+  vehicleColor: string;
+  state: string;
+  vehiclePhotoUrl: string;
+  insuranceTrafficAccidentsUrl: string;
+}
+
+export interface EditableVehicleData {
+  vehicleMake: {
+    name: String;
+  };
+  vehicleModel: {
+    name: String;
+  };
+  year: number;
+  vehicleColor: string;
+  plateNumber: string;
+  vehiclePhotoUrl: string;
+  insuranceTrafficAccidentsUrl: string;
 }
 
 export interface Configs {

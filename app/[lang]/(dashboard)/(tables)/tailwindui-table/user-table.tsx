@@ -30,6 +30,7 @@ import { getIconModalDialog } from "@/lib/utils";
 import { ActionModalDialog } from "@/lib/enums";
 import { useState } from "react";
 import DialogConfirm from "../../components/dialog-basic";
+import { Car } from "lucide-react";
 const DriverAllTable: React.FC<DriverAllTableProps> = ({ drivers }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -139,6 +140,12 @@ const DriverAllTable: React.FC<DriverAllTableProps> = ({ drivers }) => {
                             className=" h-4 w-4 mr-2 "
                           />
                           {ActionModalDialog.EDIT}
+                        </DropdownMenuItem>
+                      </Link>
+                      <Link href={`/vehiculos/editar/${item.vehicleId}`}>
+                        <DropdownMenuItem preventClose>
+                          <Car className=" h-4 w-4 mr-2 " />
+                          Editar Vehiculo
                         </DropdownMenuItem>
                       </Link>
                       <DropdownMenuItem
