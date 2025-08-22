@@ -12,6 +12,7 @@ import {
   Configs,
   Driver,
   DriverResponse,
+  EditableDriverData,
   EditableUserData,
   ResponseDataTrips,
   SolicitudCambiada,
@@ -175,6 +176,25 @@ export const fetchDataDriverById = async (
   id: number
 ): Promise<ApiResponse<DriverResponse>> => {
   return apiClientGet<ApiResponse<DriverResponse>>(`/driver/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const fetchUpdateDataDriverById = async (
+  user: EditableDriverData,
+  id: number
+): Promise<ApiResponse<Driver>> => {
+  const dataSend = {
+    profilePhotoUrl: user.profilePictureUrl,
+    identityDocumentUrl: user.identityDocumentUrl,
+    identityDocumentReverseUrl: user.identityDocumentReverseUrl,
+    driverLicenseUrl: user.driverLicenseUrl,
+    criminalRecordUrl: user.criminalRecordUrl,
+  };
+
+  return apiClientPatch<ApiResponse<Driver>>(`driver/${id}`, dataSend, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

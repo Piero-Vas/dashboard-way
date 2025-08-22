@@ -40,6 +40,18 @@ export interface Driver {
   tripTypes: String[];
 }
 
+export interface EditableDriverData {
+  mobile: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profilePictureUrl: string;
+  identityDocumentUrl: string | null;
+  identityDocumentReverseUrl: string | null;
+  driverLicenseUrl: string | null;
+  criminalRecordUrl: string | null;
+}
+
 export interface Vehicle {
   id: number;
   userId: number;

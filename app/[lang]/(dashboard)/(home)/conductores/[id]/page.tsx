@@ -3,18 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ImageWithModal from "@/components/ui/image-with-modal";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import UserTripTable from "../../../(tables)/tailwindui-table/user-trips-table";
-import UserReferedTable from "../../../(tables)/tailwindui-table/user-refered-table";
-import UserRetirtosTable from "../../../(tables)/tailwindui-table/user-retiros-table";
 import {
-  useFetchGetDriverById,
-  useFetchGetUserById,
-  useFetchVehicleById,
+    useFetchGetDriverById,
+    useFetchGetUserById,
+    useFetchVehicleById,
 } from "@/hooks/use-fetch-driver-requirement";
-import { data } from "../../dashboard/components/data";
+import Link from "next/link";
 import { useParams } from "next/navigation";
+import UserRetirtosTable from "../../../(tables)/tailwindui-table/user-retiros-table";
+import UserTripTable from "../../../(tables)/tailwindui-table/user-trips-table";
 
 const ConductoresByIdPage = () => {
   const { id } = useParams();
