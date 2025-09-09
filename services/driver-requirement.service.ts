@@ -14,6 +14,7 @@ import {
   DriverResponse,
   EditableDriverData,
   EditableUserData,
+  PayoutDrivers,
   ResponseDataTrips,
   SolicitudCambiada,
   TripById,
@@ -23,6 +24,7 @@ import {
 } from "@/types/user.interface";
 import { getAccessToken } from "@/app/[lang]/(dashboard)/(home)/constants";
 import { UserEditForm } from "../app/[lang]/(dashboard)/(home)/clientes/components/user-edit-form";
+import { PayoutDriversResponse } from "@/types/drivertopay.interface";
 
 const apiController = "/driver-requirement";
 const apiRequests = "/driver";
@@ -124,6 +126,19 @@ export const fetchAllDrivers = async (): Promise<ApiResponse<Driver[]>> => {
     params: {
       state: "ACTIVE",
     },
+  });
+};
+
+export const fetchAllDriversToPay = async (): Promise<PayoutDrivers[]> => {
+  return apiClientGet<PayoutDrivers[]>(`/payout/drivers`, {});
+};
+
+export const fetchPayoutTrips = async (
+  id: number
+): Promise<PayoutDriversResponse> => {
+  return apiClientPost<PayoutDriversResponse>(`/payout/calculate/${id}`, {
+    userId: id,
+    target: "DRIVER",
   });
 };
 

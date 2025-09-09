@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { StatusDriverRequirement } from "@/lib/enums";
 import {
   deleteDriverRequirementStatus,
   fetchAllConfigs,
   fetchAllDrivers,
+  fetchAllDriversToPay,
   fetchAllPassengers,
   fetchDataDriverById,
   fetchDataUserById,
@@ -13,17 +14,17 @@ import {
   updateDriverRequirement,
   updateDriverRequirementStatus,
 } from "@/services/driver-requirement.service";
-import { DriverRequirement } from "@/types/driver-requirement.interface";
-import { StatusDriverRequirement } from "@/lib/enums";
 import { DriversRequests } from "@/types/driver-requests";
+import { DriverRequirement } from "@/types/driver-requirement.interface";
 import {
   Configs,
   Driver,
   DriverResponse,
+  PayoutDrivers,
   User,
   VehicleResponse,
 } from "@/types/user.interface";
-import config from "../tailwind.config";
+import { useEffect, useState } from "react";
 
 export const useFetchDriverRequirements = () => {
   const [driverRequirements, setDriverRequirements] = useState<
@@ -133,6 +134,33 @@ export const useFetchAllDrivers = () => {
   }, []);
 
   return { drivers, loading, error };
+};
+
+export const useFetchAllDriversToPay = () => {
+  const [driversToPay, setDriversToPay] = useState<PayoutDrivers[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<null | string>(null);
+
+  useEffect(() => {
+    const loadDriverRequirement = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchAllDriversToPay();
+        console.log("Respuesta de la API:", data);
+
+        setDriversToPay(data);
+      } catch (err) {
+        console.error("Failed to fetch drivers:", err);
+        setError("Failed to load drivers");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDriverRequirement();
+  }, []);
+
+  return { driversToPay, loading, error };
 };
 
 export const useFetchAllConfigs = () => {

@@ -1,54 +1,24 @@
 "use client";
-import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DataRows, users } from "./data";
+import { DriverToPayRequestsTableProps } from "@/types/user-request.table-props.interface";
 import { Icon } from "@iconify/react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DriverRequestsTableProps } from "@/types/user-request.table-props.interface";
 import Link from "next/link";
 import { useState } from "react";
 
-const PaymentTable: React.FC<DriverRequestsTableProps> = ({
-  drivers: drivers,
+const PaymentTable: React.FC<DriverToPayRequestsTableProps> = ({
+  driversToPay: drivers,
 }) => {
   const columns: { key: string; label: string }[] = [
     {
@@ -56,19 +26,26 @@ const PaymentTable: React.FC<DriverRequestsTableProps> = ({
       label: "Usuario",
     },
     {
-      key: "fecha",
-      label: "Fecha de registro",
+      key: "phone",
+      label: "Teléfono",
     },
-
     {
-      key: "status",
-      label: "Estado",
+      key: "email",
+      label: "Correo",
+    },
+    {
+      key: "amoutToPay",
+      label: "Monto a pagar",
     },
     {
       key: "action",
       label: "Acciones",
     },
   ];
+
+  if (drivers.length === 0) {
+    return <div>No hay conductores para pagar</div>;
+  }
 
   return (
     <Card>
@@ -83,42 +60,36 @@ const PaymentTable: React.FC<DriverRequestsTableProps> = ({
         <TableBody>
           {drivers.map((item) => (
             <TableRow
-              key={item.user.firstName + ""}
+              key={item.firstName + ""}
               className="hover:bg-default-100"
             >
               <TableCell className=" font-medium  text-card-foreground/80">
                 <div className="flex gap-3 items-center">
                   <Avatar className="rounded-lg">
-                    <AvatarImage src={item.user.profilePictureUrl} />
+                    <AvatarImage src={item.profilePictureUrl} />
                     <AvatarFallback> {""}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col   items-start">
                     <span className="text-sm  text-default-600">
-                      {item.user.firstName} {item.user.lastName}
+                      {item.firstName} {item.lastName}
                     </span>
-                    <p className="text-xs  text-default-400">{item.user.id}</p>
+                    <p className="text-xs  text-default-400">{item.id}</p>
                   </div>
                 </div>
               </TableCell>
-              <TableCell>{"28/12/2024"}</TableCell>
+              <TableCell>{item.mobile}</TableCell>
 
-              <TableCell>
-                <Badge
-                  variant="soft"
-                  color={"success"}
-                  className="capitalize rounded-md"
-                >
-                  {"Activo"}
-                </Badge>
-              </TableCell>
+              <TableCell>{item.email}</TableCell>
+              <TableCell>{item.amoutToPay}</TableCell>
 
               <TableCell className="flex justify-end">
                 <div className="flex gap-3">
                   <BalanceModal />
                   <Link href={"/pagos/1"}>
-                  <Button size="icon" variant="outline" className="h-7 w-7">
-                    <Icon icon="heroicons:credit-card" className="h-4 w-4" />
-                  </Button></Link>
+                    <Button size="icon" variant="outline" className="h-7 w-7">
+                      <Icon icon="heroicons:credit-card" className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </TableCell>
             </TableRow>

@@ -40,6 +40,20 @@ export interface Driver {
   tripTypes: String[];
 }
 
+export interface PayoutDrivers {
+  id: number;
+  mobile: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  latitude: number;
+  longitude: number;
+  ratingAveragePassenger: number;
+  ratingAverageDriver: number;
+  profilePictureUrl: string;
+  amoutToPay: number;
+}
+
 export interface EditableDriverData {
   mobile: string;
   email: string;
