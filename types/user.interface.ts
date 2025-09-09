@@ -24,20 +24,20 @@ export interface EditableUserData {
 
 export interface Driver {
   userId: number;
-  identityDocumentUrl: String | null;
-  driverLicenseUrl: String | null;
-  criminalRecordUrl: String | null;
+  identityDocumentUrl: string | null;
+  driverLicenseUrl: string | null;
+  criminalRecordUrl: string | null;
   vehicleId: number | null;
-  state: String;
+  state: string;
   id: number;
   user: {
     id: number;
-    firstName: String;
-    lastName: String;
+    firstName: string;
+    lastName: string;
     profilePictureUrl: string;
   };
   paymentMethods: [];
-  tripTypes: String[];
+  tripTypes: string[];
 }
 
 export interface PayoutDrivers {
@@ -71,7 +71,7 @@ export interface Vehicle {
   userId: number;
   vehicleMake: {
     id: number;
-    name: String;
+    name: string;
     createUid: number;
     writeUid: number;
     createdAt: Date;
@@ -79,7 +79,7 @@ export interface Vehicle {
   };
   vehicleModel: {
     id: number;
-    name: String;
+    name: string;
     makeId: number;
     createUid: number;
     writeUid: number;
@@ -87,9 +87,9 @@ export interface Vehicle {
     updatedAt: Date;
   };
   year: number;
-  plateNumber: String;
-  vehicleType: String;
-  tripClasses: String[];
+  plateNumber: string;
+  vehicleType: string;
+  tripClasses: string[];
   vehicleColor: string;
   state: string;
   vehiclePhotoUrl: string;
@@ -98,10 +98,10 @@ export interface Vehicle {
 
 export interface EditableVehicleData {
   vehicleMake: {
-    name: String;
+    name: string;
   };
   vehicleModel: {
-    name: String;
+    name: string;
   };
   year: number;
   vehicleColor: string;
@@ -112,31 +112,31 @@ export interface EditableVehicleData {
 
 export interface Configs {
   id: number;
-  key: String;
-  value: String;
-  description: null | String;
+  key: string;
+  value: string;
+  description: null | string;
   createAt: Date;
   updatedAt: Date;
 }
 
 export interface SolicitudCambiada {
-  status: String;
+  status: string;
   data: {
     userId: number;
-    identityDocumentUrl: String;
-    driverLicenseUrl: String;
-    criminalRecordUrl: String;
+    identityDocumentUrl: string;
+    driverLicenseUrl: string;
+    criminalRecordUrl: string;
     vehicleId: number;
-    state: String;
+    state: string;
     id: number;
     user: {
       id: number;
-      firstName: String;
-      lastName: String;
-      profilePictureUrl: String;
+      firstName: string;
+      lastName: string;
+      profilePictureUrl: string;
     };
-    paymentMethods: String[];
-    tripTypes: String[];
+    paymentMethods: string[];
+    tripTypes: string[];
   };
 }
 
