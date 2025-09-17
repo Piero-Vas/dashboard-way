@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 const DriversPage = () => {
-  const { drivers, loading, error } = useFetchAllDrivers();
+  const { drivers, loading, error, refetch } = useFetchAllDrivers();
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -23,7 +23,7 @@ const DriversPage = () => {
       </div>
 
       <div className="mt-5 text-2xl font-medium text-default-900">
-        <DriverAllTable drivers={drivers} />
+        <DriverAllTable drivers={drivers} refreshDrivers={refetch} />
       </div>
     </div>
   );

@@ -115,25 +115,24 @@ export const useFetchAllDrivers = () => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
+  const loadDriverRequirement = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAllDrivers();
+      console.log(data.data);
+      setDrivers(data.data);
+    } catch (err) {
+      console.error("Failed to fetch solicitudes:", err);
+      setError("Failed to load solicitudes");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const loadDriverRequirement = async () => {
-      setLoading(true);
-      try {
-        const data = await fetchAllDrivers();
-        console.log(data.data);
-        setDrivers(data.data);
-      } catch (err) {
-        console.error("Failed to fetch solicitudes:", err);
-        setError("Failed to load solicitudes");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadDriverRequirement();
   }, []);
 
-  return { drivers, loading, error };
+  return { drivers, loading, error, refetch: loadDriverRequirement };
 };
 
 export const useFetchAllDriversToPay = () => {
@@ -192,25 +191,25 @@ export const useFetchAllPassengers = () => {
   const [passengers, setPassengers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
-  useEffect(() => {
-    const loadDriverRequirement = async () => {
-      setLoading(true);
-      try {
-        const data = await fetchAllPassengers();
-        console.log(data.data);
-        setPassengers(data.data);
-      } catch (err) {
-        console.error("Failed to fetch solicitudes:", err);
-        setError("Failed to load solicitudes");
-      } finally {
-        setLoading(false);
-      }
-    };
 
+  const loadDriverRequirement = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAllPassengers();
+      console.log(data.data);
+      setPassengers(data.data);
+    } catch (err) {
+      console.error("Failed to fetch solicitudes:", err);
+      setError("Failed to load solicitudes");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     loadDriverRequirement();
   }, []);
 
-  return { passengers, loading, error };
+  return { passengers, loading, error, refetch: loadDriverRequirement };
 };
 
 export const useFetchGetUserById = (id: number) => {

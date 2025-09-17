@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { ActionModalDialog } from "@/lib/enums";
 import { getIconModalDialog } from "@/lib/utils";
+import { fetchDeleteVehicle } from "@/services/driver-requirement.service";
 import { VechilesTableProps } from "@/types/driver-request-table-props.interface";
 import { Icon } from "@iconify/react";
 import { Car } from "lucide-react";
@@ -26,9 +27,12 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
-const VechilesTable: React.FC<VechilesTableProps> = ({ vehicles }) => {
+const VechilesTable: React.FC<
+  VechilesTableProps & { refreshVehicles: () => void }
+> = ({ vehicles, refreshVehicles }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
   const columns: { key: string; label: string }[] = [
     {
       key: "id",
@@ -68,9 +72,15 @@ const VechilesTable: React.FC<VechilesTableProps> = ({ vehicles }) => {
 
   const handleConfirmDelete = async () => {
     if (selectedUserId !== null) {
-      // await fetchDeleteDataUserById(selectedUserId);
-      setOpenDialog(false);
-      setSelectedUserId(null);
+      try {
+        await fetchDeleteVehicle(selectedUserId);
+        console.log("Deleted vehicle with ID:", selectedUserId);
+        refreshVehicles(); // Refresca solo la tabla
+        setOpenDialog(false);
+        setSelectedUserId(null);
+      } catch (error) {
+        console.error("Error deleting vehicle:", error);
+      }
     }
   };
 

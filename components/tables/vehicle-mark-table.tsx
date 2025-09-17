@@ -1,5 +1,7 @@
 "use client";
+import { getAccessToken } from "@/app/[lang]/(dashboard)/(home)/constants";
 import VehicleMarkModelModals from "@/app/[lang]/(dashboard)/(home)/marca-vehiculos/components/VehicleMarkModelModals";
+import DialogConfirm from "@/app/[lang]/(dashboard)/components/dialog-basic";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -16,18 +18,28 @@ import { Fragment, useEffect, useState } from "react";
 type Make = { id: number; name: string };
 type Model = { id: number; name: string; makeId: number };
 
+const keyRide = getAccessToken();
+
 const VehicleTableMarkModel = () => {
   const [makes, setMakes] = useState<Make[]>([]);
   const [collapsedRows, setCollapsedRows] = useState<number[]>([]);
   const [modelsByMake, setModelsByMake] = useState<Record<number, Model[]>>({});
   const [loadingModels, setLoadingModels] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedDelete, setSelectedDelete] = useState<{
+    type: "make" | "model";
+    id: number;
+  } | null>(null);
 
   const refreshMakes = () => {
     fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`)
       .then((res) => res.json())
-      .then((data) => setMakes(data.data || []));
+      .then((data) => {
+        setMakes(data.data || []);
+        setModelsByMake({}); // Limpia los modelos cargados
+        setCollapsedRows([]); // Cierra todas las filas colapsadas
+      });
   };
-
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`)
       .then((res) => res.json())
@@ -58,6 +70,50 @@ const VehicleTableMarkModel = () => {
     { key: "nombre", label: "nombre" },
     { key: "acciones", label: "acciones" },
   ];
+
+  const handleConfirmDelete = async () => {
+    if (!selectedDelete) return;
+    if (selectedDelete.type === "make" && modelsByMake) {
+      console.log("ID de la marca eliminada:", selectedDelete.id);
+      const makeId = Object.keys(modelsByMake).find((makeId) =>
+        modelsByMake[Number(makeId)]?.some((m) => m.id === selectedDelete.id)
+      );
+      try {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make/${selectedDelete.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${keyRide}`,
+            },
+          }
+        );
+        refreshMakes();
+      } catch (error) {
+        console.error("Error al eliminar la marca:", error);
+      }
+    } else {
+      console.log("ID del modelo eliminado:", selectedDelete.id);
+      try {
+        const rest = await fetch(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-model/${selectedDelete.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${keyRide}`,
+            },
+          }
+        );
+        console.log(rest);
+        refreshMakes();
+      } catch (error) {
+        console.error("Error al eliminar el modelo:", error);
+      }
+    }
+    setDeleteModalOpen(false);
+  };
 
   return (
     <>
@@ -105,6 +161,10 @@ const VehicleTableMarkModel = () => {
                     variant="outline"
                     color="destructive"
                     className=" h-7 w-7 border-none"
+                    onClick={() => {
+                      setSelectedDelete({ type: "make", id: item.id });
+                      setDeleteModalOpen(true);
+                    }}
                   >
                     <Icon icon="heroicons:trash" className=" h-5 w-5  " />
                   </Button>
@@ -140,6 +200,13 @@ const VehicleTableMarkModel = () => {
                             variant="outline"
                             color="destructive"
                             className=" h-7 w-7 border-none"
+                            onClick={() => {
+                              setSelectedDelete({
+                                type: "model",
+                                id: model.id,
+                              });
+                              setDeleteModalOpen(true);
+                            }}
                           >
                             <Icon
                               icon="heroicons:trash"
@@ -164,6 +231,13 @@ const VehicleTableMarkModel = () => {
           ))}
         </TableBody>
       </Table>
+      <DialogConfirm
+        title="Eliminar Marca"
+        descripcion="¿Estás seguro de que deseas eliminar esta marca?"
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        onSave={handleConfirmDelete}
+      />
     </>
   );
 };

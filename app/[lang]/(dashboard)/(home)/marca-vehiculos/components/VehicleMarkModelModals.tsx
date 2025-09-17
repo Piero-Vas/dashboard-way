@@ -58,7 +58,7 @@ const VehicleMarkModelModals = ({ makes, refreshMakes }: Props) => {
     setMarcaSeleccionada(undefined);
     setOpenModelo(false);
     setLoadingAdd(false);
-    // Opcional: podrías refrescar modelos aquí si lo necesitas
+    refreshMakes();
   };
 
   return (

@@ -31,7 +31,10 @@ import { ActionModalDialog } from "@/lib/enums";
 import { useState } from "react";
 import DialogConfirm from "../../components/dialog-basic";
 import { Car } from "lucide-react";
-const DriverAllTable: React.FC<DriverAllTableProps> = ({ drivers }) => {
+import { fetchDeleteDataUserById } from "@/services/driver-requirement.service";
+const DriverAllTable: React.FC<
+  DriverAllTableProps & { refreshDrivers: () => void }
+> = ({ drivers, refreshDrivers }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
@@ -58,9 +61,14 @@ const DriverAllTable: React.FC<DriverAllTableProps> = ({ drivers }) => {
   const handleConfirmDelete = async () => {
     if (selectedUserId !== null) {
       console.log("ID del usuario eliminado:", selectedUserId);
-      // await fetchDeleteDataUserById(selectedUserId);
-      setOpenDialog(false);
-      setSelectedUserId(null);
+      try {
+        await fetchDeleteDataUserById(selectedUserId);
+        refreshDrivers();
+        setOpenDialog(false);
+        setSelectedUserId(null);
+      } catch (error) {
+        console.error("Error deleting user:", error);
+      }
     }
   };
   return (

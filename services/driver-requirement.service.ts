@@ -187,6 +187,10 @@ export const fetchDeleteDataUserById = async (id: number) => {
   return apiClientDelete(`${apiRequestsUser}/${id}`);
 };
 
+export const fetchDeleteVehicle = async (id: number) => {
+  return apiClientDelete(`/vehicle/${id}`);
+};
+
 export const fetchDataDriverById = async (
   id: number
 ): Promise<ApiResponse<DriverResponse>> => {

@@ -27,10 +27,11 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useState } from "react";
 import DialogConfirm from "../../components/dialog-basic";
+import { fetchDeleteDataUserById } from "@/services/driver-requirement.service";
 
-const UserTableStatus: React.FC<UserRequestsTableProps> = ({
-  users: users,
-}) => {
+const UserTableStatus: React.FC<
+  UserRequestsTableProps & { refreshUsers: () => void }
+> = ({ users: users, refreshUsers }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
@@ -62,9 +63,14 @@ const UserTableStatus: React.FC<UserRequestsTableProps> = ({
   const handleConfirmDelete = async () => {
     if (selectedUserId !== null) {
       console.log("ID del usuario eliminado:", selectedUserId);
-      // await fetchDeleteDataUserById(selectedUserId);
-      setOpenDialog(false);
-      setSelectedUserId(null);
+      try {
+        await fetchDeleteDataUserById(selectedUserId);
+        refreshUsers();
+        setOpenDialog(false);
+        setSelectedUserId(null);
+      } catch (error) {
+        console.error("Error deleting user:", error);
+      }
     }
   };
 

@@ -66,23 +66,23 @@ export const useFetchAllVehicle = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
-  useEffect(() => {
-    const loadDriverRequirement = async () => {
-      setLoading(true);
-      try {
-        const data = await fetchAllVehicles();
-        console.log("data", data.data);
-        setVehicles(data.data);
-      } catch (err) {
-        console.error("Failed to get all vehicles:", err);
-        setError("Failed to  get all Vehicles");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Define la función de carga fuera del useEffect
+  const loadDriverRequirement = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchAllVehicles();
+      setVehicles(data.data);
+    } catch (err) {
+      console.error("Failed to get all vehicles:", err);
+      setError("Failed to  get all Vehicles");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadDriverRequirement();
   }, []);
 
-  return { vehicles: vehicles, loading, error };
+  return { vehicles, loading, error, refetch: loadDriverRequirement };
 };

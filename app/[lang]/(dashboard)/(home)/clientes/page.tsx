@@ -4,7 +4,7 @@ import { useFetchAllPassengers } from "@/hooks/use-fetch-driver-requirement";
 import UserTableStatus from "../../(tables)/tailwindui-table/clientes-table";
 
 const PassengerPage = () => {
-  const { passengers, loading, error } = useFetchAllPassengers();
+  const { passengers, loading, error, refetch } = useFetchAllPassengers(); // Asegúrate de que tu hook tenga refetch
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -17,7 +17,7 @@ const PassengerPage = () => {
         <div className="text-2xl font-medium">Administrar Clientes</div>
       </div>
       <div className="mt-5 text-2xl font-medium text-default-900">
-        <UserTableStatus users={passengers} />
+        <UserTableStatus users={passengers} refreshUsers={refetch} />
       </div>
     </div>
   );
