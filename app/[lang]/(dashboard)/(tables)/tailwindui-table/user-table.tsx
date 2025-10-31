@@ -60,9 +60,8 @@ const DriverAllTable: React.FC<
 
   const handleConfirmDelete = async () => {
     if (selectedUserId !== null) {
-      console.log("ID del usuario eliminado:", selectedUserId);
       try {
-        await fetchDeleteDataUserById(selectedUserId);
+        await fetchDeleteDataUserById(selectedUserId, "driver");
         refreshDrivers();
         setOpenDialog(false);
         setSelectedUserId(null);
@@ -71,6 +70,7 @@ const DriverAllTable: React.FC<
       }
     }
   };
+
   return (
     <>
       <Card>
@@ -180,6 +180,7 @@ const DriverAllTable: React.FC<
         open={openDialog}
         onOpenChange={setOpenDialog}
         onSave={handleConfirmDelete}
+        descripcion="Al eliminar un conductor, también se eliminarán todos los datos asociados a él, incluyendo sus vehículos, registros de viajes y su perfil de pasajero. ¿Estás seguro de que deseas continuar?"
       />
     </>
   );

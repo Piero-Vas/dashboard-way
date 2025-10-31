@@ -183,8 +183,20 @@ export const fetchUpdateDataUserById = async (
   );
 };
 
-export const fetchDeleteDataUserById = async (id: number) => {
-  return apiClientDelete(`${apiRequestsUser}/${id}`);
+export const fetchDeleteDataUserById = async (id: number, role: string) => {
+  const body = {
+    userId: id,
+    role: role,
+    reason: {
+      reasonId: 1,
+      reasonDetail: "Bad experience with the trip",
+    },
+  };
+  return apiClientPost(`auth/delete-account`, body, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 export const fetchDeleteVehicle = async (id: number) => {

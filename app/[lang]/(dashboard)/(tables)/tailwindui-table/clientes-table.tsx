@@ -56,15 +56,16 @@ const UserTableStatus: React.FC<
   ];
 
   const handleOpenDialog = (id: number) => {
+    console.log("ID del usuario a eliminar:", id);
     setSelectedUserId(id);
     setOpenDialog(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async (role: string) => {
     if (selectedUserId !== null) {
       console.log("ID del usuario eliminado:", selectedUserId);
       try {
-        await fetchDeleteDataUserById(selectedUserId);
+        await fetchDeleteDataUserById(selectedUserId, role);
         refreshUsers();
         setOpenDialog(false);
         setSelectedUserId(null);
@@ -188,7 +189,8 @@ const UserTableStatus: React.FC<
       <DialogConfirm
         open={openDialog}
         onOpenChange={setOpenDialog}
-        onSave={handleConfirmDelete}
+        onSave={() => handleConfirmDelete("passenger")}
+        descripcion="Al eliminar un pasajero, también se eliminarán todos los datos asociados a él, incluyendo sus viajes y su perfil de conductor. ¿Estás seguro de que deseas continuar?"
       />
     </>
   );

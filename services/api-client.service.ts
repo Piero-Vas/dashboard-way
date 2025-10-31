@@ -24,11 +24,9 @@ export const apiClientPatch = async <T>(endpoint: string, data: any, options = {
     }
 };
 
-export const apiClientPost = async <T>(endpoint: string, options = {}): Promise<T> => {
+export const apiClientPost = async <T>(endpoint: string, data: any = {}, options = {}): Promise<T> => {
     try {
-        const response = await api.post<T>(`${endpoint}`, {
-            ...options,
-        });
+        const response = await api.post<T>(`${endpoint}`, data, options);
         return response.data;
     } catch (error) {
         console.error("Error execute post:", error);
