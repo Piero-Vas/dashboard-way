@@ -269,3 +269,20 @@ export const updateDriverRequirementStatus = async (
 export const deleteDriverRequirementStatus = async (id: number) => {
   return apiClientDelete(`${apiController}/${id}`);
 };
+
+export const fetchAdminRechargeWallet = async (
+  idUser: number,
+  amount: number,
+  description: string
+) => {
+  const dataSend = {
+    idUser,
+    amount,
+    description,
+  };
+  return apiClientPost(`/wallet/admin/rechargeDirect`, dataSend, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

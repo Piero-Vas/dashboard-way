@@ -25,32 +25,38 @@ import { Switch } from "@/components/ui/switch";
 import { DriverAllTableProps } from "@/types/driver-request-table-props.interface";
 import { Driver } from "@/types/user.interface";
 import Link from "next/link";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { fetchAdminRechargeWallet } from "@/services/driver-requirement.service";
 import { getIconModalDialog } from "@/lib/utils";
 import { ActionModalDialog } from "@/lib/enums";
 import { useState } from "react";
 import DialogConfirm from "../../components/dialog-basic";
-import { Car } from "lucide-react";
+import { Car, Wallet } from "lucide-react";
 import { fetchDeleteDataUserById } from "@/services/driver-requirement.service";
 const DriverAllTable: React.FC<
   DriverAllTableProps & { refreshDrivers: () => void }
 > = ({ drivers, refreshDrivers }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  
+  const [openRechargeDialog, setOpenRechargeDialog] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState("");
+  const [rechargeDescription, setRechargeDescription] = useState("Recarga por Plin / Yape (Fuera de App)");
+  const [isRecharging, setIsRecharging] = useState(false);
 
   const columns: { key: string; label: string }[] = [
-    {
-      key: "name",
-      label: "Nombre",
-    },
-    {
-      key: "status",
-      label: "Estado",
-    },
-    {
-      key: "action",
-      label: "Acciones",
-    },
+    { key: "driver", label: "Conductor" },
+    { key: "status", label: "Estado" },
+    { key: "action", label: "Acciones" },
   ];
 
   const handleOpenDialog = (id: number) => {
@@ -71,6 +77,29 @@ const DriverAllTable: React.FC<
     }
   };
 
+  const handleOpenRechargeDialog = (id: number) => {
+    setSelectedUserId(id);
+    setRechargeAmount("");
+    setRechargeDescription("Recarga por Plin / Yape (Fuera de App)");
+    setOpenRechargeDialog(true);
+  };
+
+  const handleConfirmRecharge = async () => {
+    if (selectedUserId !== null && rechargeAmount) {
+      setIsRecharging(true);
+      try {
+        await fetchAdminRechargeWallet(selectedUserId, parseFloat(rechargeAmount), rechargeDescription);
+        setOpenRechargeDialog(false);
+        setSelectedUserId(null);
+        refreshDrivers();
+      } catch (error) {
+        console.error("Error recharging:", error);
+      } finally {
+        setIsRecharging(false);
+      }
+    }
+  };
+
   return (
     <>
       <Card>
@@ -84,24 +113,23 @@ const DriverAllTable: React.FC<
           </TableHeader>
           <TableBody>
             {drivers.map((item: Driver) => (
-              <TableRow key={item.userId}>
-                <TableCell className="font-medium  text-card-foreground/80">
-                  <TableCell className=" font-medium  text-card-foreground/80">
-                    <div className="flex gap-3 items-center">
-                      <Avatar className="rounded-lg">
-                        <AvatarImage src={item.user.profilePictureUrl ?? ""} />
-                        <AvatarFallback>
-                          {item.user.firstName.split("")[0]}
-                          {item.user.lastName.split("")[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col   items-start">
-                        <span className="text-sm  text-default-600">
-                          {item.user.firstName} {item.user.lastName}
-                        </span>
-                      </div>
+              <TableRow key={item.userId} className="hover:bg-muted/50 transition-colors">
+                <TableCell className="font-medium text-card-foreground/80">
+                  <div className="flex gap-3 items-center">
+                    <Avatar className="rounded-lg h-10 w-10 border border-border">
+                      <AvatarImage src={item.user?.profilePictureUrl ?? ""} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {item.user?.firstName?.charAt(0) || ""}
+                        {item.user?.lastName?.charAt(0) || ""}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm font-semibold text-foreground">
+                        {item.user?.firstName} {item.user?.lastName}
+                      </span>
+                      <span className="text-xs text-muted-foreground">ID: #{item.userId}</span>
                     </div>
-                  </TableCell>
+                  </div>
                 </TableCell>
 
                 <TableCell>
@@ -159,6 +187,15 @@ const DriverAllTable: React.FC<
                       <DropdownMenuItem
                         preventClose
                         onClick={() => {
+                          handleOpenRechargeDialog(item.id);
+                        }}
+                      >
+                        <Wallet className=" h-4 w-4 mr-2 " />
+                        Recargar Saldo
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        preventClose
+                        onClick={() => {
                           handleOpenDialog(item.id);
                         }}
                       >
@@ -182,6 +219,52 @@ const DriverAllTable: React.FC<
         onSave={handleConfirmDelete}
         descripcion="Al eliminar un conductor, también se eliminarán todos los datos asociados a él, incluyendo sus vehículos, registros de viajes y su perfil de pasajero. ¿Estás seguro de que deseas continuar?"
       />
+      <Dialog open={openRechargeDialog} onOpenChange={setOpenRechargeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recargar Billetera</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Monto a recargar (S/)</Label>
+              <Input
+                type="number"
+                value={rechargeAmount}
+                onChange={(e) => setRechargeAmount(e.target.value)}
+                placeholder="Ej: 50.00"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Motivo de la recarga</Label>
+              <Select value={rechargeDescription} onValueChange={setRechargeDescription}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un motivo" />
+                </SelectTrigger>
+                <SelectContent className="z-[9999]">
+                  <SelectItem value="Recarga por Plin / Yape (Fuera de App)">Recarga por Plin / Yape (Fuera de App)</SelectItem>
+                  <SelectItem value="Bono promocional o compensación">Bono promocional o compensación</SelectItem>
+                  <SelectItem value="Ajuste manual a favor">Ajuste manual a favor</SelectItem>
+                  <SelectItem value="Devolución por error de cobro">Devolución por error de cobro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOpenRechargeDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={isRecharging || !rechargeAmount}
+              onClick={handleConfirmRecharge}
+            >
+              {isRecharging ? "Recargando..." : "Confirmar Recarga"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
