@@ -2036,6 +2036,16 @@ export const menusConfig = {
             href: "/solicitudes",
             icon: ClipBoard,
           },
+          {
+            title: "Mapa Conductores",
+            href: "/mapa-conductores",
+            icon: Map2,
+          },
+          {
+            title: "Auditoría",
+            href: "/audit-logs",
+            icon: Note3,
+          },
         ],
       },
       {

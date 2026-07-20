@@ -1,15 +1,23 @@
 "use client";
 import { Cup, Eye, Increase, Session } from "@/components/svg";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useFetchDataTrips } from "@/hooks/use-fetch-dashboard";
+import { useFetchDataTrips, useFetchUserCount } from "@/hooks/use-fetch-dashboard";
 import { cn, getReportStats } from "@/lib/utils";
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 
 const ReportsArea = () => {
+  const router = useRouter();
   const { statusCounts, loading, error } = useFetchDataTrips();
+  const { monthlySignups: passengerSignups } = useFetchUserCount("passenger");
+  const { monthlySignups: driverSignups } = useFetchUserCount("driver");
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>Cargando...</div>;
   if (error) return <div>Error: {error}</div>;
+
+  const totalPassengers = passengerSignups.reduce((acc, curr) => acc + (curr.userCount || 0), 0);
+  const totalDrivers = driverSignups.reduce((acc, curr) => acc + (curr.userCount || 0), 0);
+  const totalUsers = totalPassengers + totalDrivers;
 
   const cancelledStats = getReportStats(statusCounts, "cancelled");
   const completedStats = getReportStats(statusCounts, "arrived_at_destination");
@@ -19,11 +27,12 @@ const ReportsArea = () => {
     {
       id: 1,
       name: "Usuarios",
-      count: "1",
-      rate: "2",
+      count: totalUsers > 0 ? totalUsers.toString() : "0",
+      rate: "100",
       isUp: true,
       icon: <Session className="h-4 w-4" />,
       color: "primary",
+      link: "/clientes",
     },
     {
       id: 2,
@@ -33,6 +42,7 @@ const ReportsArea = () => {
       isUp: cancelledStats.isUp,
       icon: <Eye className="h-4 w-4" />,
       color: "info",
+      link: "/solicitudes",
     },
     {
       id: 3,
@@ -42,6 +52,7 @@ const ReportsArea = () => {
       isUp: completedStats.isUp,
       icon: <Increase className="h-4 w-4" />,
       color: "warning",
+      link: "/solicitudes",
     },
     {
       id: 4,
@@ -51,12 +62,17 @@ const ReportsArea = () => {
       isUp: contraOfertaStats.isUp,
       icon: <Cup className="h-4 w-4" />,
       color: "destructive",
+      link: "/solicitudes",
     },
   ];
   return (
     <>
       {reports.map((item, index) => (
-        <Card key={`report-card-${index}`}>
+        <Card
+          key={`report-card-${index}`}
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => router.push(item.link)}
+        >
           <CardHeader className="flex-col-reverse sm:flex-row flex-wrap gap-2  border-none mb-0 pb-0">
             <span className="text-sm font-medium text-default-900 flex-1">
               {item.name}
@@ -99,7 +115,8 @@ const ReportsArea = () => {
                     className="text-destructive text-xl"
                   />
                 </>
-              )}
+              )
+              }
             </div>
             <div className="mt-1 text-xs text-default-600">
               En los ultimos 30 días

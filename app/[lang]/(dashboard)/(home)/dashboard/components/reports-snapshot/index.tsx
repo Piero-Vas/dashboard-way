@@ -34,16 +34,18 @@ const ReportsSnapshot = () => {
   console.log("Drivers", driverSignups);
   console.log("Passengers", monthlySignups);
 
+  const currentYear = new Date().getFullYear().toString();
+
   const driversData = Array.from({ length: 12 }, (_, i) => {
     const found = driverSignups.find(
-      (item) => Number(item.month) === i + 1 && item.year === "2025"
+      (item) => Number(item.month) === i + 1 && item.year === currentYear
     );
     return found ? found.userCount : 0;
   });
 
   const customersData = Array.from({ length: 12 }, (_, i) => {
     const found = monthlySignups.find(
-      (item) => Number(item.month) === i + 1 && item.year === "2025"
+      (item) => Number(item.month) === i + 1 && item.year === currentYear
     );
     return found ? found.userCount : 0;
   });
@@ -71,9 +73,9 @@ const ReportsSnapshot = () => {
     },
   ];
 
-  const allUsersTotal = allUsersData.reduce((acc, val) => acc + val, 0);
   const driversTotal = driversData.reduce((acc, val) => acc + val, 0);
   const customersTotal = customersData.reduce((acc, val) => acc + val, 0);
+  const allUsersTotal = driversTotal + customersTotal;
 
   const primary = `hsl(${
     theme?.cssVars[mode === "dark" ? "dark" : "light"].primary
