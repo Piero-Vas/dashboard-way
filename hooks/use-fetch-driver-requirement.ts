@@ -243,25 +243,27 @@ export const useFetchGetDriverById = (id: number) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
-  useEffect(() => {
-    const fetchUserById = async (id: number) => {
-      setLoading(true);
-      try {
-        const data = await fetchDataDriverById(id);
-        console.log("Datos conductor:", data);
-        setDriver(data.data);
-      } catch (err) {
-        console.error("Failed to fetch driver:", err);
-        setError("Failed to load driver");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUserById = async (id: number) => {
+    setLoading(true);
+    try {
+      const data = await fetchDataDriverById(id);
+      console.log("Datos conductor:", data);
+      setDriver(data.data);
+    } catch (err) {
+      console.error("Failed to fetch driver:", err);
+      setError("Failed to load driver");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchUserById(id);
+  useEffect(() => {
+    if (id) {
+      fetchUserById(id);
+    }
   }, [id]);
 
-  return { driver, loading, error };
+  return { driver, loading, error, refetch: () => fetchUserById(id) };
 };
 
 export const useFetchVehicleById = (id: number) => {
