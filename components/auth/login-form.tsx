@@ -91,8 +91,12 @@ const LogInForm = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Éxito:", data.data.accessToken);
-        localStorage.setItem("accessToken", data.data.accessToken);
+        if (data?.data?.accessToken) {
+          localStorage.setItem("accessToken", data.data.accessToken);
+        }
+        if (data?.data?.refreshToken) {
+          localStorage.setItem("refreshToken", data.data.refreshToken);
+        }
         startTransition(async () => {
           let response = await signIn("credentials", {
             email: dataLogin.email,

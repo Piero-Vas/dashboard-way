@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 5000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -142,6 +142,7 @@
   "devDependencies": {
     "@faker-js/faker": "^8.2.0",
     "@svgr/webpack": "^8.1.0",
+    "@types/acorn": "^4.0.6",
     "@types/next": "^9.0.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.38",
