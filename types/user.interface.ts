@@ -12,6 +12,10 @@ export interface User {
   ratingAveragePassenger: number;
   ratingAverageDriver: number;
   profilePictureUrl: null | string;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: null | string;
+  state?: string;
 }
 
 export interface EditableUserData {
@@ -30,11 +34,17 @@ export interface Driver {
   vehicleId: number | null;
   state: string;
   id: number;
+  createdAt?: string;
   user: {
     id: number;
     firstName: string;
     lastName: string;
     profilePictureUrl: string;
+    email?: string;
+    mobile?: string;
+    latitude?: number;
+    longitude?: number;
+    createdAt?: string;
   };
   paymentMethods: [];
   tripTypes: string[];

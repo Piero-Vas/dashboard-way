@@ -57,14 +57,10 @@ export default function EditDataConductor() {
       console.log("Data response:", dataResponse);
       console.log("Driver response:", driverResponse);
 
-      if (
-        dataResponse.status === "success" &&
-        driverResponse.status === "success"
-      ) {
-        window.location.href = "/conductores";
-      }
+      window.location.href = "/conductores";
     } catch (err) {
-      console.error(" error", err);
+      console.error("Error al guardar conductor:", err);
+      alert("No se pudo guardar la información del conductor.");
     } finally {
       console.log("finished");
     }

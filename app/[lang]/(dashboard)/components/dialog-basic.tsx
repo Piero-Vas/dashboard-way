@@ -1,13 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import React from "react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import React, { useState, useEffect } from "react";
 
 interface DialogConfirmProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: () => void;
+  onSave: (reason?: string) => void;
   title?: string;
   descripcion?: string;
+  requireReason?: boolean;
+  reasonPlaceholder?: string;
+  confirmText?: string;
 }
 
 export default function DialogConfirm({
@@ -16,34 +22,68 @@ export default function DialogConfirm({
   onSave,
   title,
   descripcion,
+  requireReason = false,
+  reasonPlaceholder = "Escribe el motivo de esta acción...",
+  confirmText = "Confirmar",
 }: DialogConfirmProps) {
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (!open) {
+      setReason("");
+    }
+  }, [open]);
+
   const handleSave = async () => {
-    await onSave();
+    if (requireReason && !reason.trim()) return;
+    await onSave(reason.trim());
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-6 max-w-md text-center">
-        <h2 className="text-lg font-semibold mb-4">
-          {title ? title : "Confirmar Acción"}
-        </h2>
-        <p className="text-gray-600 mb-6">
+      <DialogContent className="p-6 max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">
+            {title ? title : "Confirmar Acción"}
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground my-2">
           {descripcion
             ? descripcion
             : "¿Estás seguro de que deseas realizar esta acción?"}
         </p>
-        <div className="flex justify-center gap-4">
+
+        {requireReason && (
+          <div className="space-y-2 my-3">
+            <Label className="text-xs font-semibold text-foreground">
+              Motivo de la acción <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={reasonPlaceholder}
+              rows={3}
+              className="text-xs sm:text-sm resize-none"
+            />
+          </div>
+        )}
+
+        <DialogFooter className="flex justify-end gap-3 mt-4">
           <Button
             variant="outline"
-            color="destructive"
+            color="secondary"
             onClick={() => onOpenChange(false)}
           >
             Cancelar
           </Button>
-          <Button color="success" onClick={handleSave}>
-            Confirmar
+          <Button
+            color="destructive"
+            disabled={requireReason && !reason.trim()}
+            onClick={handleSave}
+          >
+            {confirmText}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

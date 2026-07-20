@@ -32,12 +32,14 @@ export default function EditDataClient() {
   const handleSave = async (data: EditableUserData) => {
     try {
       const dataResponse = await fetchUpdateDataUserById(data, Number(id));
-
-      if (dataResponse.status === "success") {
+      if (dataResponse && (dataResponse.status === "success" || (dataResponse as any).id || (dataResponse as any).email || (dataResponse as any).data)) {
+        window.location.href = "/clientes";
+      } else {
         window.location.href = "/clientes";
       }
     } catch (err) {
-      console.error(" error", err);
+      console.error("Error al guardar usuario:", err);
+      alert("No se pudo guardar la información del usuario.");
     } finally {
       console.log("finished");
     }

@@ -7,7 +7,6 @@ import {
 } from "./api-client.service";
 import { DriverRequirement } from "@/types/driver-requirement.interface";
 import { DriversRequests } from "@/types/driver-requests";
-import { headers } from "next/headers";
 import {
   Configs,
   Driver,
@@ -22,15 +21,12 @@ import {
   Vehicle,
   VehicleResponse,
 } from "@/types/user.interface";
-import { getAccessToken } from "@/app/[lang]/(dashboard)/(home)/constants";
 import { UserEditForm } from "../app/[lang]/(dashboard)/(home)/clientes/components/user-edit-form";
 import { PayoutDriversResponse } from "@/types/drivertopay.interface";
 
 const apiController = "/driver-requirement";
 const apiRequests = "/driver";
 const apiRequestsUser = "/user";
-
-const token = getAccessToken();
 
 export const fetchDriverRequirements = async (): Promise<
   ApiResponse<DriverRequirement[]>
@@ -42,21 +38,12 @@ export const fetchDriverAllRequests = async (): Promise<
   ApiResponse<DriversRequests[]>
 > => {
   return apiClientGet<ApiResponse<DriversRequests[]>>(
-    `${apiRequests}?state=PENDING`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
+    `${apiRequests}?state=PENDING`
   );
 };
 
 export const fetchAllVehicles = async (): Promise<ApiResponse<Vehicle[]>> => {
-  return apiClientGet<ApiResponse<Vehicle[]>>(`/vehicle`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientGet<ApiResponse<Vehicle[]>>(`/vehicle`);
 };
 
 export const updateDataSolicitudes = async (
@@ -69,24 +56,16 @@ export const updateDataSolicitudes = async (
 
   return apiClientPatch<ApiResponse<SolicitudCambiada>>(
     `/driver/${id}`,
-    dataSend,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
+    dataSend
   );
 };
 
-export const fetchAllPassengers = async (): Promise<ApiResponse<User[]>> => {
+export const fetchAllPassengers = async (page = 1, limit = 1000): Promise<ApiResponse<User[]>> => {
   return apiClientGet<ApiResponse<User[]>>(`/user`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     params: {
       role: "passenger",
-      page: 1,
-      limit: 100,
+      page,
+      limit,
     },
   });
 };
@@ -96,9 +75,6 @@ export const fetchAllTripsByUser = async (
   id: number
 ): Promise<ApiResponse<ResponseDataTrips>> => {
   return apiClientGet<ApiResponse<ResponseDataTrips>>(`/trip/history`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     params: {
       role: role,
       userId: id,
@@ -111,22 +87,11 @@ export const fetchAllTripsByUser = async (
 export const fetchAllTripsById = async (
   id: string
 ): Promise<ApiResponse<TripById>> => {
-  return apiClientGet<ApiResponse<TripById>>(`/trip/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientGet<ApiResponse<TripById>>(`/trip/${id}`);
 };
 
 export const fetchAllDrivers = async (): Promise<ApiResponse<Driver[]>> => {
-  return apiClientGet<ApiResponse<Driver[]>>(`/driver`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    params: {
-      state: "ACTIVE",
-    },
-  });
+  return apiClientGet<ApiResponse<Driver[]>>(`/driver`);
 };
 
 export const fetchAllDriversToPay = async (): Promise<PayoutDrivers[]> => {
@@ -143,21 +108,13 @@ export const fetchPayoutTrips = async (
 };
 
 export const fetchAllConfigs = async (): Promise<ApiResponse<Configs[]>> => {
-  return apiClientGet<ApiResponse<Configs[]>>(`/custom-config`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientGet<ApiResponse<Configs[]>>(`/custom-config`);
 };
 
 export const fetchDataUserById = async (
   id: number
 ): Promise<ApiResponse<User>> => {
-  return apiClientGet<ApiResponse<User>>(`${apiRequestsUser}/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientGet<ApiResponse<User>>(`${apiRequestsUser}/${id}`);
 };
 
 export const fetchUpdateDataUserById = async (
@@ -174,29 +131,20 @@ export const fetchUpdateDataUserById = async (
 
   return apiClientPatch<ApiResponse<User>>(
     `${apiRequestsUser}/${id}`,
-    dataSend,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
+    dataSend
   );
 };
 
-export const fetchDeleteDataUserById = async (id: number, role: string) => {
+export const fetchDeleteDataUserById = async (id: number, role: string, reasonDetail?: string) => {
   const body = {
     userId: id,
     role: role,
     reason: {
       reasonId: 1,
-      reasonDetail: "Bad experience with the trip",
+      reasonDetail: reasonDetail || "Eliminación administrativa desde Dashboard",
     },
   };
-  return apiClientPost(`auth/delete-account`, body, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientPost(`auth/delete-account`, body);
 };
 
 export const fetchDeleteVehicle = async (id: number) => {
@@ -206,11 +154,7 @@ export const fetchDeleteVehicle = async (id: number) => {
 export const fetchDataDriverById = async (
   id: number
 ): Promise<ApiResponse<DriverResponse>> => {
-  return apiClientGet<ApiResponse<DriverResponse>>(`/driver/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientGet<ApiResponse<DriverResponse>>(`/driver/${id}`);
 };
 
 export const fetchUpdateDataDriverById = async (
@@ -225,21 +169,13 @@ export const fetchUpdateDataDriverById = async (
     criminalRecordUrl: user.criminalRecordUrl,
   };
 
-  return apiClientPatch<ApiResponse<Driver>>(`driver/${id}`, dataSend, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientPatch<ApiResponse<Driver>>(`driver/${id}`, dataSend);
 };
 
 export const fetchDataVehicleById = async (
   id: number
 ): Promise<ApiResponse<VehicleResponse>> => {
-  return apiClientGet<ApiResponse<VehicleResponse>>(`/vehicle/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientGet<ApiResponse<VehicleResponse>>(`/vehicle/${id}`);
 };
 
 export const fetchDriverRequirementById = async (
@@ -280,9 +216,5 @@ export const fetchAdminRechargeWallet = async (
     amount,
     description,
   };
-  return apiClientPost(`/wallet/admin/rechargeDirect`, dataSend, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return apiClientPost(`/wallet/admin/rechargeDirect`, dataSend);
 };

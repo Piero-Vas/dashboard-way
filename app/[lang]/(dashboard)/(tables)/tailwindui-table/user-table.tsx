@@ -38,10 +38,13 @@ import { Label } from "@/components/ui/label";
 import { fetchAdminRechargeWallet } from "@/services/driver-requirement.service";
 import { getIconModalDialog } from "@/lib/utils";
 import { ActionModalDialog } from "@/lib/enums";
-import { useState } from "react";
+import React, { useState } from "react";
 import DialogConfirm from "../../components/dialog-basic";
 import { Car, Wallet } from "lucide-react";
 import { fetchDeleteDataUserById } from "@/services/driver-requirement.service";
+import { exportToCSV } from "@/lib/export-utils";
+import { logAuditEvent } from "@/lib/audit-logger";
+
 const DriverAllTable: React.FC<
   DriverAllTableProps & { refreshDrivers: () => void }
 > = ({ drivers, refreshDrivers }) => {
@@ -53,8 +56,31 @@ const DriverAllTable: React.FC<
   const [rechargeDescription, setRechargeDescription] = useState("Recarga por Plin / Yape (Fuera de App)");
   const [isRecharging, setIsRecharging] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
+
+  const filteredDrivers = drivers.filter((d) => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    const fullName = `${d.user?.firstName || ""} ${d.user?.lastName || ""}`.toLowerCase();
+    const state = (d.state || "").toLowerCase();
+    const userIdStr = String(d.userId || d.id || "");
+    return (
+      fullName.includes(term) ||
+      state.includes(term) ||
+      userIdStr.includes(term)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredDrivers.length / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedDrivers = filteredDrivers.slice(startIndex, startIndex + pageSize);
+
   const columns: { key: string; label: string }[] = [
+    { key: "index", label: "N°" },
     { key: "driver", label: "Conductor" },
+    { key: "createdAt", label: "Fecha Ingreso" },
     { key: "status", label: "Estado" },
     { key: "action", label: "Acciones" },
   ];
@@ -64,10 +90,20 @@ const DriverAllTable: React.FC<
     setOpenDialog(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async (reasonDetail?: string) => {
     if (selectedUserId !== null) {
+      const d = drivers.find((item) => item.id === selectedUserId || item.userId === selectedUserId);
+      const targetName = d ? `${d.user?.firstName || ""} ${d.user?.lastName || ""}`.trim() : `ID #${selectedUserId}`;
       try {
-        await fetchDeleteDataUserById(selectedUserId, "driver");
+        await fetchDeleteDataUserById(selectedUserId, "driver", reasonDetail);
+        logAuditEvent({
+          action: "Eliminación de Conductor",
+          admin: "Administrador",
+          targetUser: `${targetName} (#${selectedUserId})`,
+          role: "Driver",
+          reason: reasonDetail || "Eliminación administrativa desde Dashboard",
+          type: "delete",
+        });
         refreshDrivers();
         setOpenDialog(false);
         setSelectedUserId(null);
@@ -86,9 +122,19 @@ const DriverAllTable: React.FC<
 
   const handleConfirmRecharge = async () => {
     if (selectedUserId !== null && rechargeAmount) {
+      const d = drivers.find((item) => item.id === selectedUserId || item.userId === selectedUserId);
+      const targetName = d ? `${d.user?.firstName || ""} ${d.user?.lastName || ""}`.trim() : `ID #${selectedUserId}`;
       setIsRecharging(true);
       try {
         await fetchAdminRechargeWallet(selectedUserId, parseFloat(rechargeAmount), rechargeDescription);
+        logAuditEvent({
+          action: "Recarga Manual Billetera",
+          admin: "Administrador",
+          targetUser: `${targetName} (#${selectedUserId})`,
+          role: "Driver",
+          reason: `${rechargeDescription} (S/ ${parseFloat(rechargeAmount).toFixed(2)})`,
+          type: "recharge",
+        });
         setOpenRechargeDialog(false);
         setSelectedUserId(null);
         refreshDrivers();
@@ -100,9 +146,62 @@ const DriverAllTable: React.FC<
     }
   };
 
+  const handleExportCSV = () => {
+    exportToCSV(
+      filteredDrivers,
+      [
+        { key: "id", label: "ID Conductor" },
+        { key: "userId", label: "ID Usuario" },
+        { label: "Nombre Completo", key: "fullName", transform: (d) => `${d.user?.firstName || ""} ${d.user?.lastName || ""}` },
+        { label: "Email", key: "email", transform: (d) => d.user?.email || "N/A" },
+        { label: "Teléfono", key: "mobile", transform: (d) => d.user?.mobile || "N/A" },
+        { key: "state", label: "Estado", transform: (d) => d.state || "Activo" },
+        { key: "createdAt", label: "Fecha Ingreso", transform: (d) => {
+          const dateVal = d.createdAt || d.user?.createdAt || (d as any).created_at || (d.user as any)?.created_at;
+          return dateVal ? new Date(dateVal).toLocaleDateString("es-PE") : "N/A";
+        } },
+      ],
+      "conductores_way"
+    );
+  };
+
   return (
     <>
       <Card>
+        <div className="p-4 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative w-full max-w-md">
+            <Icon
+              icon="heroicons:magnifying-glass-16-solid"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            />
+            <Input
+              type="text"
+              placeholder="Buscar conductor por nombre, ID o estado..."
+              value={searchTerm}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-9 h-9 text-xs sm:text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            {searchTerm && (
+              <div className="text-xs text-muted-foreground hidden sm:block">
+                Encontrados: <span className="font-semibold text-foreground">{filteredDrivers.length}</span>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="flex items-center gap-2 text-xs"
+            >
+              <Icon icon="heroicons:arrow-down-tray-16-solid" className="h-4 w-4" />
+              Exportar CSV
+            </Button>
+          </div>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -112,15 +211,20 @@ const DriverAllTable: React.FC<
             </TableRow>
           </TableHeader>
           <TableBody>
-            {drivers.map((item: Driver) => (
-              <TableRow key={item.userId} className="hover:bg-muted/50 transition-colors">
+            {paginatedDrivers.map((item: Driver, idx: number) => {
+              const dateVal = item.createdAt || item.user?.createdAt || (item as any).created_at || (item.user as any)?.created_at;
+              return (
+              <TableRow key={item.id || item.userId || idx} className="hover:bg-muted/50 transition-colors">
+                <TableCell className="font-semibold text-default-600">
+                  {startIndex + idx + 1}
+                </TableCell>
                 <TableCell className="font-medium text-card-foreground/80">
                   <div className="flex gap-3 items-center">
                     <Avatar className="rounded-lg h-10 w-10 border border-border">
-                      <AvatarImage src={item.user?.profilePictureUrl ?? ""} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {item.user?.firstName?.charAt(0) || ""}
-                        {item.user?.lastName?.charAt(0) || ""}
+                      <AvatarImage src={item.user?.profilePictureUrl || ""} alt={`${item.user?.firstName} ${item.user?.lastName}`} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {item.user?.firstName?.charAt(0)?.toUpperCase() || "C"}
+                        {item.user?.lastName?.charAt(0)?.toUpperCase() || ""}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start">
@@ -132,13 +236,17 @@ const DriverAllTable: React.FC<
                   </div>
                 </TableCell>
 
+                <TableCell className="text-sm text-default-600">
+                  {dateVal ? new Date(dateVal).toLocaleDateString("es-PE", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}
+                </TableCell>
+
                 <TableCell>
                   <Badge
                     variant="soft"
-                    color="success"
+                    color={item.state === "INACTIVE" || item.state === "REJECTED" ? "destructive" : "success"}
                     className="capitalize rounded-md"
                   >
-                    Activo
+                    {item.state || "Activo"}
                   </Badge>
                 </TableCell>
 
@@ -209,15 +317,48 @@ const DriverAllTable: React.FC<
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            );
+            })}
           </TableBody>
         </Table>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-border text-sm">
+          <div className="text-muted-foreground text-xs sm:text-sm">
+            Mostrando <span className="font-semibold text-foreground">{filteredDrivers.length > 0 ? startIndex + 1 : 0}</span> a{" "}
+            <span className="font-semibold text-foreground">{Math.min(startIndex + pageSize, filteredDrivers.length)}</span> de{" "}
+            <span className="font-semibold text-foreground">{filteredDrivers.length}</span> registros
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Anterior
+            </Button>
+            <span className="text-xs font-semibold px-2">
+              Página {currentPage} de {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </div>
       </Card>
       <DialogConfirm
         open={openDialog}
         onOpenChange={setOpenDialog}
-        onSave={handleConfirmDelete}
-        descripcion="Al eliminar un conductor, también se eliminarán todos los datos asociados a él, incluyendo sus vehículos, registros de viajes y su perfil de pasajero. ¿Estás seguro de que deseas continuar?"
+        requireReason={true}
+        reasonPlaceholder="Describe por qué deseas eliminar a este conductor..."
+        confirmText="Eliminar Conductor"
+        onSave={(reason) => handleConfirmDelete(reason)}
+        descripcion="Al eliminar un conductor, también se eliminarán sus vehículos y perfil de pasajero. Por favor ingresa el motivo obligatorio para la auditoría."
       />
       <Dialog open={openRechargeDialog} onOpenChange={setOpenRechargeDialog}>
         <DialogContent>

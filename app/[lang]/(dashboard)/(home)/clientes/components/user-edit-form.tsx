@@ -19,9 +19,12 @@ import { useRef, useState } from "react";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { app } from "@/firebaseClient";
 
+import DialogConfirm from "../../../components/dialog-basic";
+import { logAuditEvent } from "@/lib/audit-logger";
+
 interface UserEditFormProps {
   initialData: EditableUserData;
-  onSave: (data: EditableUserData) => void;
+  onSave: (data: EditableUserData, reason?: string) => void;
   onCancel: () => void;
 }
 
@@ -35,6 +38,7 @@ export function UserEditForm({
   const [formData, setFormData] = useState<EditableUserData>(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [openReasonModal, setOpenReasonModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: keyof EditableUserData, value: string) => {
@@ -44,12 +48,24 @@ export function UserEditForm({
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setOpenReasonModal(true);
+  };
 
+  const handleConfirmSave = async (reason?: string) => {
+    setIsLoading(true);
     try {
-      await onSave(formData);
+      await onSave(formData, reason);
+      logAuditEvent({
+        action: "Edición de Perfil",
+        admin: "Administrador",
+        targetUser: `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "Cliente",
+        role: "Passenger",
+        reason: reason || "Modificación de datos de perfil de usuario",
+        type: "edit",
+      });
+      setOpenReasonModal(false);
     } finally {
       setIsLoading(false);
     }
@@ -275,6 +291,16 @@ export function UserEditForm({
           </div>
         </form>
       </CardContent>
+      <DialogConfirm
+        open={openReasonModal}
+        onOpenChange={setOpenReasonModal}
+        requireReason={true}
+        reasonPlaceholder="Describe por qué estás realizando estos cambios en el perfil..."
+        title="Justificación de Modificación"
+        confirmText="Guardar Cambios"
+        onSave={(reason?: string) => handleConfirmSave(reason)}
+        descripcion="Por motivos de auditoría, es obligatorio ingresar una justificación antes de actualizar la información de este cliente."
+      />
     </Card>
   );
 }

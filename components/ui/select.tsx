@@ -121,8 +121,9 @@ const SelectValue = SelectPrimitive.Value;
 
 interface SelectTriggerProps extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>,
   VariantProps<typeof selectVariants> {
-  icon?: React.ReactNode
-  color?: 'default' | 'primary' | 'info' | 'warning' | 'success' | 'destructive'
+  icon?: React.ReactNode;
+  children?: React.ReactNode;
+  color?: 'default' | 'primary' | 'info' | 'warning' | 'success' | 'destructive';
 }
 
 const SelectTrigger = React.forwardRef<

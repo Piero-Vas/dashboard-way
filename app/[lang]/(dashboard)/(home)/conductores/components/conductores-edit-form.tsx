@@ -29,9 +29,12 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 
+import DialogConfirm from "../../../components/dialog-basic";
+import { logAuditEvent } from "@/lib/audit-logger";
+
 interface ConductorEditFormProps {
   initialData: EditableDriverData;
-  onSave: (data: EditableDriverData) => void;
+  onSave: (data: EditableDriverData, reason?: string) => void;
   onCancel: () => void;
 }
 
@@ -52,6 +55,7 @@ export function ConductorEditForm({
   const [formData, setFormData] = useState<EditableDriverData>(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [openReasonModal, setOpenReasonModal] = useState(false);
   const [uploadingRequirement, setUploadingRequirement] = useState<
     string | null
   >(null);
@@ -105,8 +109,12 @@ export function ConductorEditForm({
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setOpenReasonModal(true);
+  };
+
+  const handleConfirmSave = async (reason?: string) => {
     setIsLoading(true);
     const dataSend = {
       ...formData,
@@ -125,7 +133,16 @@ export function ConductorEditForm({
         "",
     };
     try {
-      await onSave(dataSend);
+      await onSave(dataSend, reason);
+      logAuditEvent({
+        action: "Edición de Perfil",
+        admin: "Administrador",
+        targetUser: `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "Conductor",
+        role: "Driver",
+        reason: reason || "Modificación de datos de perfil de conductor",
+        type: "edit",
+      });
+      setOpenReasonModal(false);
     } finally {
       setIsLoading(false);
     }
@@ -504,6 +521,16 @@ export function ConductorEditForm({
           </div>
         </div>
       </Card>
+      <DialogConfirm
+        open={openReasonModal}
+        onOpenChange={setOpenReasonModal}
+        requireReason={true}
+        reasonPlaceholder="Describe por qué estás realizando estos cambios en el perfil del conductor..."
+        title="Justificación de Modificación"
+        confirmText="Guardar Cambios"
+        onSave={(reason?: string) => handleConfirmSave(reason)}
+        descripcion="Por motivos de auditoría, es obligatorio ingresar una justificación antes de actualizar la información de este conductor."
+      />
     </form>
   );
 }
