@@ -178,6 +178,25 @@ export const fetchDataVehicleById = async (
   return apiClientGet<ApiResponse<VehicleResponse>>(`/vehicle/${id}`);
 };
 
+export const fetchUpdateVehicleData = async (
+  id: number,
+  data: any
+): Promise<ApiResponse<VehicleResponse>> => {
+  return apiClientPatch<ApiResponse<VehicleResponse>>(`/vehicle/${id}`, data);
+};
+
+export const fetchVehicleMakes = async (): Promise<ApiResponse<{ id: number; name: string }[]>> => {
+  return apiClientGet<ApiResponse<{ id: number; name: string }[]>>(`/vehicle-make`);
+};
+
+export const fetchVehicleModelsByMake = async (
+  makeId: number
+): Promise<ApiResponse<{ id: number; name: string; makeId: number }[]>> => {
+  return apiClientGet<ApiResponse<{ id: number; name: string; makeId: number }[]>>(
+    `/vehicle-model?makeId=${makeId}`
+  );
+};
+
 export const fetchDriverRequirementById = async (
   id: number
 ): Promise<ApiResponse<DriverRequirement>> => {

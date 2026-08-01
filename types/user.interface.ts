@@ -107,11 +107,15 @@ export interface Vehicle {
 }
 
 export interface EditableVehicleData {
-  vehicleMake: {
-    name: string;
+  vehicleMakeId: number;
+  vehicleModelId: number;
+  vehicleMake?: {
+    id?: number;
+    name?: string;
   };
-  vehicleModel: {
-    name: string;
+  vehicleModel?: {
+    id?: number;
+    name?: string;
   };
   year: number;
   vehicleColor: string;
@@ -220,6 +224,8 @@ export interface DriverResponse {
 export interface VehicleResponse {
   id: number;
   userId: number;
+  vehicleMakeId?: number;
+  vehicleModelId?: number;
   vehicleMake: {
     id: number;
     name: string;

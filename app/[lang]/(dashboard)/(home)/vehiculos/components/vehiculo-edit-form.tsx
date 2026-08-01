@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,19 +13,30 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { app } from "@/firebaseClient";
+import {
+  fetchVehicleMakes,
+  fetchVehicleModelsByMake,
+} from "@/services/driver-requirement.service";
 import type { EditableVehicleData } from "@/types/user.interface";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import {
   Calendar,
   Car,
+  ExternalLink,
   FileText,
   ImageIcon,
   Loader2,
   PaintBucket,
   Upload,
 } from "lucide-react";
-import { useRef, useState } from "react";
 
 interface VehiculoEditFormProps {
   initialData: EditableVehicleData;
@@ -41,6 +53,28 @@ interface DriverRequirement {
 
 const storage = getStorage(app);
 
+const COLOR_OPTIONS = [
+  { value: "WHITE", label: "Blanco" },
+  { value: "BLACK", label: "Negro" },
+  { value: "GRAY", label: "Gris" },
+  { value: "RED", label: "Rojo" },
+  { value: "BLUE", label: "Azul" },
+  { value: "YELLOW", label: "Amarillo" },
+  { value: "BEIGE", label: "Beige" },
+  { value: "BROWN", label: "Marrón" },
+  { value: "GREEN", label: "Verde" },
+];
+
+const isPdfUrl = (url?: string): boolean => {
+  if (!url) return false;
+  const cleanUrl = url.toLowerCase();
+  return (
+    cleanUrl.includes(".pdf") ||
+    cleanUrl.includes("application/pdf") ||
+    cleanUrl.includes("format=pdf")
+  );
+};
+
 export function VehiculoEditForm({
   initialData,
   onSave,
@@ -48,10 +82,15 @@ export function VehiculoEditForm({
 }: VehiculoEditFormProps) {
   const [formData, setFormData] = useState<EditableVehicleData>(initialData);
   const [isLoading, setIsLoading] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadingRequirement, setUploadingRequirement] = useState<
     string | null
   >(null);
+
+  const [makes, setMakes] = useState<{ id: number; name: string }[]>([]);
+  const [models, setModels] = useState<{ id: number; name: string }[]>([]);
+  const [loadingMakes, setLoadingMakes] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+
   const [driverRequirements, setDriverRequirements] = useState<
     DriverRequirement[]
   >([
@@ -69,18 +108,72 @@ export function VehiculoEditForm({
     },
   ]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const requirementFileInputRefs = useRef<{
     [key: string]: HTMLInputElement | null;
   }>({});
 
+  useEffect(() => {
+    const loadMakes = async () => {
+      setLoadingMakes(true);
+      try {
+        const res = await fetchVehicleMakes();
+        if (res && res.data) {
+          setMakes(res.data);
+        }
+      } catch (err) {
+        console.error("Error al cargar marcas:", err);
+      } finally {
+        setLoadingMakes(false);
+      }
+    };
+    loadMakes();
+  }, []);
+
+  useEffect(() => {
+    if (formData.vehicleMakeId) {
+      const loadModels = async () => {
+        setLoadingModels(true);
+        try {
+          const res = await fetchVehicleModelsByMake(formData.vehicleMakeId);
+          if (res && res.data) {
+            setModels(res.data);
+          }
+        } catch (err) {
+          console.error("Error al cargar modelos:", err);
+        } finally {
+          setLoadingModels(false);
+        }
+      };
+      loadModels();
+    } else {
+      setModels([]);
+    }
+  }, [formData.vehicleMakeId]);
+
   const handleInputChange = (
     field: keyof EditableVehicleData,
-    value: string
+    value: string | number
   ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handleMakeChange = (makeIdStr: string) => {
+    const makeId = Number(makeIdStr);
+    setFormData((prev) => ({
+      ...prev,
+      vehicleMakeId: makeId,
+      vehicleModelId: 0,
+    }));
+  };
+
+  const handleModelChange = (modelIdStr: string) => {
+    const modelId = Number(modelIdStr);
+    setFormData((prev) => ({
+      ...prev,
+      vehicleModelId: modelId,
     }));
   };
 
@@ -93,7 +186,7 @@ export function VehiculoEditForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const dataSend = {
+    const dataSend: EditableVehicleData = {
       ...formData,
       insuranceTrafficAccidentsUrl:
         driverRequirements.find(
@@ -110,8 +203,9 @@ export function VehiculoEditForm({
     }
   };
 
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+  const handleRequirementUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    requirementId: string
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -120,65 +214,23 @@ export function VehiculoEditForm({
       "image/jpeg",
       "image/jpg",
       "image/png",
-      "image/gif",
       "image/webp",
+      "application/pdf",
     ];
     if (!allowedTypes.includes(file.type)) {
-      alert(
-        "Por favor selecciona un archivo de imagen válido (JPEG, PNG, GIF, WebP)"
+      console.error(
+        "Archivo no válido:",
+        file.type,
+        "Por favor selecciona un archivo JPEG, PNG, WEBP o PDF"
       );
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert(
-        "El archivo es demasiado grande. Por favor selecciona una imagen menor a 5MB."
-      );
-      return;
-    }
-
-    setIsUploadingImage(true);
-
-    try {
-      const storageRef = ref(
-        storage,
-        `profile-images/${Date.now()}-${file.name}`
-      );
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-
-      setFormData((prev) => ({
-        ...prev,
-        profilePictureUrl: url,
-      }));
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Error al subir la imagen. Por favor intenta de nuevo.");
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
-
-  const handleRequirementUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    requirementId: string
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-    if (!allowedTypes.includes(file.type)) {
-      alert("Por favor selecciona un archivo válido (JPEG, PNG)");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert(
-        "El archivo es demasiado grande. Por favor selecciona un archivo menor a 10MB."
+      console.error(
+        "Archivo demasiado grande:",
+        file.size,
+        "El tamaño máximo es 10MB"
       );
       return;
     }
@@ -199,15 +251,10 @@ export function VehiculoEditForm({
         requirementFileInputRefs.current[requirementId]!.value = "";
       }
     } catch (error) {
-      console.error("Error uploading requirement:", error);
-      alert("Error al subir el archivo. Por favor intenta de nuevo.");
+      console.error("Error al subir el archivo:", error);
     } finally {
       setUploadingRequirement(null);
     }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
   };
 
   const triggerRequirementFileInput = (requirementId: string) => {
@@ -216,7 +263,7 @@ export function VehiculoEditForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="w-full   mx-auto">
+      <Card className="w-full mx-auto">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Car className="h-5 w-5" />
@@ -226,7 +273,7 @@ export function VehiculoEditForm({
             Actualiza la información del vehículo
           </CardDescription>
         </CardHeader>
-        <div className="flex w-full  flex-col md:flex-row ">
+        <div className="flex w-full flex-col md:flex-row">
           <div className="w-full md:w-1/2">
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -257,14 +304,15 @@ export function VehiculoEditForm({
                   </Label>
                   <Input
                     id="year"
-                    type="text"
+                    type="number"
                     placeholder="2025"
-                    value={formData.year}
+                    value={formData.year || ""}
                     onChange={(e) => handleInputChange("year", e.target.value)}
                     required
                   />
                 </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label
@@ -274,16 +322,26 @@ export function VehiculoEditForm({
                     <Car className="h-4 w-4" />
                     Marca
                   </Label>
-                  <Input
-                    id="vehicleMake"
-                    type="text"
-                    placeholder="Marca"
-                    value={formData.vehicleMake.name}
-                    onChange={(e) =>
-                      handleInputChange("vehicleMake", e.target.value)
+                  <Select
+                    value={
+                      formData.vehicleMakeId
+                        ? String(formData.vehicleMakeId)
+                        : ""
                     }
-                    required
-                  />
+                    onValueChange={handleMakeChange}
+                    disabled={loadingMakes}
+                  >
+                    <SelectTrigger id="vehicleMake">
+                      <SelectValue placeholder="Seleccionar marca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {makes.map((make) => (
+                        <SelectItem key={make.id} value={String(make.id)}>
+                          {make.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -294,16 +352,26 @@ export function VehiculoEditForm({
                     <Car className="h-4 w-4" />
                     Modelo
                   </Label>
-                  <Input
-                    id="vehicleModel"
-                    type="text"
-                    placeholder="Modelo"
-                    value={formData.vehicleModel.name}
-                    onChange={(e) =>
-                      handleInputChange("vehicleModel", e.target.value)
+                  <Select
+                    value={
+                      formData.vehicleModelId
+                        ? String(formData.vehicleModelId)
+                        : ""
                     }
-                    required
-                  />
+                    onValueChange={handleModelChange}
+                    disabled={loadingModels || !formData.vehicleMakeId}
+                  >
+                    <SelectTrigger id="vehicleModel">
+                      <SelectValue placeholder="Seleccionar modelo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {models.map((model) => (
+                        <SelectItem key={model.id} value={String(model.id)}>
+                          {model.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -316,18 +384,26 @@ export function VehiculoEditForm({
                     <PaintBucket className="h-4 w-4" />
                     Color
                   </Label>
-                  <Input
-                    id="vehicleColor"
-                    type="text"
-                    placeholder="Color"
-                    value={formData.vehicleColor}
-                    onChange={(e) =>
-                      handleInputChange("vehicleColor", e.target.value)
+                  <Select
+                    value={formData.vehicleColor || ""}
+                    onValueChange={(val) =>
+                      handleInputChange("vehicleColor", val)
                     }
-                    required
-                  />
+                  >
+                    <SelectTrigger id="vehicleColor">
+                      <SelectValue placeholder="Seleccionar color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COLOR_OPTIONS.map((color) => (
+                        <SelectItem key={color.value} value={color.value}>
+                          {color.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button type="submit" className="flex-1" disabled={isLoading}>
                   {isLoading ? "Guardando..." : "Guardar Cambios"}
@@ -344,9 +420,10 @@ export function VehiculoEditForm({
               </div>
             </CardContent>
           </div>
+
           <div className="w-full md:w-1/2">
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {driverRequirements.map((requirement) => (
                   <div
                     key={requirement.id}
@@ -357,18 +434,36 @@ export function VehiculoEditForm({
                       {requirement.label}
                     </Label>
 
-                    <div className="aspect-square w-full bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                    <div className="aspect-square w-full bg-muted rounded-lg flex items-center justify-center overflow-hidden relative">
                       {requirement.url ? (
-                        <img
-                          src={requirement.url || "/placeholder.svg"}
-                          alt={requirement.label}
-                          className="w-full h-full object-cover"
-                        />
+                        isPdfUrl(requirement.url) ? (
+                          <div className="flex flex-col items-center justify-center gap-3 p-4 text-center w-full h-full bg-slate-50 dark:bg-slate-900 border rounded-lg">
+                            <FileText className="h-12 w-12 text-primary" />
+                            <span className="text-xs font-medium line-clamp-2 px-2 text-foreground">
+                              Documento PDF ({requirement.label})
+                            </span>
+                            <a
+                              href={requirement.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              Ver Documento
+                            </a>
+                          </div>
+                        ) : (
+                          <img
+                            src={requirement.url}
+                            alt={requirement.label}
+                            className="w-full h-full object-cover"
+                          />
+                        )
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <ImageIcon className="h-8 w-8" />
                           <span className="text-xs text-center">
-                            Sin imagen
+                            Sin imagen / archivo
                           </span>
                         </div>
                       )}
@@ -376,7 +471,7 @@ export function VehiculoEditForm({
 
                     <Input
                       type="url"
-                      placeholder="https://ejemplo.com/documento.jpg"
+                      placeholder="https://ejemplo.com/documento.pdf"
                       value={requirement.url}
                       onChange={(e) =>
                         handleRequirementUrlChange(

@@ -14,8 +14,8 @@ import {
   useFetchVehicleById,
 } from "@/hooks/use-fetch-driver-requirement";
 import {
-  fetchUpdateDataDriverById,
-  fetchUpdateDataUserById,
+  fetchDataVehicleById,
+  fetchUpdateVehicleData,
 } from "@/services/driver-requirement.service";
 import { VehiculoEditForm } from "../../components/vehiculo-edit-form";
 
@@ -25,19 +25,17 @@ export default function EditDataVehiculo() {
   const { vehicle, loading, error } = useFetchVehicleById(Number(id));
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Cargando...</div>;
   }
   if (error) {
     return <div>Error: {error}</div>;
   }
 
   const initData: EditableVehicleData = {
-    vehicleMake: {
-      name: vehicle?.vehicleMake.name || "",
-    },
-    vehicleModel: {
-      name: vehicle?.vehicleModel.name || "",
-    },
+    vehicleMakeId: vehicle?.vehicleMakeId || vehicle?.vehicleMake?.id || 0,
+    vehicleModelId: vehicle?.vehicleModelId || vehicle?.vehicleModel?.id || 0,
+    vehicleMake: vehicle?.vehicleMake,
+    vehicleModel: vehicle?.vehicleModel,
     year: vehicle?.year || 0,
     vehicleColor: vehicle?.vehicleColor || "",
     plateNumber: vehicle?.plateNumber || "",
@@ -46,16 +44,21 @@ export default function EditDataVehiculo() {
   };
 
   const handleSave = async (data: EditableVehicleData) => {
-    // try {
-    //   const dataResponse = await fetchUpdateDataUserById(dataSend, Number(id));
-    //   if (dataResponse.status === "success") {
-    //     window.location.href = "/conductores";
-    //   }
-    // } catch (err) {
-    //   console.error(" error", err);
-    // } finally {
-    //   console.log("finished");
-    // }
+    try {
+      const payload = {
+        vehicleMakeId: Number(data.vehicleMakeId),
+        vehicleModelId: Number(data.vehicleModelId),
+        year: Number(data.year),
+        vehicleColor: data.vehicleColor,
+        plateNumber: data.plateNumber,
+        vehiclePhotoUrl: data.vehiclePhotoUrl,
+        insuranceTrafficAccidentsUrl: data.insuranceTrafficAccidentsUrl,
+      };
+      await fetchUpdateVehicleData(Number(id), payload);
+      window.history.back();
+    } catch (err) {
+      console.error("Error al actualizar vehículo:", err);
+    }
   };
 
   const handleCancel = () => {
