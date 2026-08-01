@@ -57,21 +57,51 @@ const DriverAllTable: React.FC<
   const [isRecharging, setIsRecharging] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
 
-  const filteredDrivers = drivers.filter((d) => {
-    const term = searchTerm.toLowerCase().trim();
-    if (!term) return true;
-    const fullName = `${d.user?.firstName || ""} ${d.user?.lastName || ""}`.toLowerCase();
-    const state = (d.state || "").toLowerCase();
-    const userIdStr = String(d.userId || d.id || "");
-    return (
-      fullName.includes(term) ||
-      state.includes(term) ||
-      userIdStr.includes(term)
-    );
-  });
+  const filteredDrivers = drivers
+    .filter((d) => {
+      const term = searchTerm.toLowerCase().trim();
+      const fullName = `${d.user?.firstName || ""} ${d.user?.lastName || ""}`.toLowerCase();
+      const state = (d.state || "").toLowerCase();
+      const userIdStr = String(d.userId || d.id || "");
+      const matchesSearch =
+        !term || fullName.includes(term) || state.includes(term) || userIdStr.includes(term);
+
+      const matchesStatus =
+        statusFilter === "ALL" || (d.state || "ACTIVE").toUpperCase() === statusFilter;
+
+      const dateVal =
+        d.createdAt || d.user?.createdAt || (d as any).created_at || (d.user as any)?.created_at;
+      let matchesDate = true;
+      if (dateVal) {
+        const dTime = new Date(dateVal).getTime();
+        if (startDate) {
+          const startTime = new Date(startDate).getTime();
+          if (dTime < startTime) matchesDate = false;
+        }
+        if (endDate) {
+          const endTime = new Date(endDate).setHours(23, 59, 59, 999);
+          if (dTime > endTime) matchesDate = false;
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesDate;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(
+        a.createdAt || a.user?.createdAt || (a as any).created_at || 0
+      ).getTime();
+      const dateB = new Date(
+        b.createdAt || b.user?.createdAt || (b as any).created_at || 0
+      ).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
 
   const totalPages = Math.ceil(filteredDrivers.length / pageSize) || 1;
   const startIndex = (currentPage - 1) * pageSize;
@@ -168,39 +198,113 @@ const DriverAllTable: React.FC<
   return (
     <>
       <Card>
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full max-w-md">
-            <Icon
-              icon="heroicons:magnifying-glass-16-solid"
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-            />
-            <Input
-              type="text"
-              placeholder="Buscar conductor por nombre, ID o estado..."
-              value={searchTerm}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-9 h-9 text-xs sm:text-sm"
-            />
-          </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            {searchTerm && (
-              <div className="text-xs text-muted-foreground hidden sm:block">
-                Encontrados: <span className="font-semibold text-foreground">{filteredDrivers.length}</span>
+        <div className="p-4 border-b border-border flex flex-col gap-3">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 flex-wrap">
+            <div className="relative w-full md:w-72">
+              <Icon
+                icon="heroicons:magnifying-glass-16-solid"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+              />
+              <Input
+                type="text"
+                placeholder="Buscar conductor por nombre, ID..."
+                value={searchTerm}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-9 h-9 text-xs"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-muted-foreground">Desde:</span>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-9 text-xs w-32"
+                />
               </div>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExportCSV}
-              className="flex items-center gap-2 text-xs"
-            >
-              <Icon icon="heroicons:arrow-down-tray-16-solid" className="h-4 w-4" />
-              Exportar CSV
-            </Button>
+
+              <div className="flex items-center gap-1 text-xs">
+                <span className="text-muted-foreground">Hasta:</span>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="h-9 text-xs w-32"
+                />
+              </div>
+
+              <Select
+                value={statusFilter}
+                onValueChange={(val) => {
+                  setStatusFilter(val);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="h-9 text-xs w-32">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos los Estados</SelectItem>
+                  <SelectItem value="ACTIVE">Activo / Aprobado</SelectItem>
+                  <SelectItem value="PENDING">Pendiente</SelectItem>
+                  <SelectItem value="INACTIVE">Inhabilitado</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={sortOrder}
+                onValueChange={(val: "desc" | "asc") => setSortOrder(val)}
+              >
+                <SelectTrigger className="h-9 text-xs w-40">
+                  <SelectValue placeholder="Orden" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Más Recientes Primero</SelectItem>
+                  <SelectItem value="asc">Más Antiguos Primero</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 text-xs h-9"
+              >
+                <Icon icon="heroicons:arrow-down-tray-16-solid" className="h-4 w-4" />
+                Exportar CSV
+              </Button>
+            </div>
           </div>
+          {(searchTerm || startDate || endDate || statusFilter !== "ALL") && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Resultados filtrados: <strong className="text-foreground">{filteredDrivers.length}</strong> de {drivers.length}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStartDate("");
+                  setEndDate("");
+                  setStatusFilter("ALL");
+                  setSortOrder("desc");
+                }}
+                className="text-xs h-6 px-2 text-primary"
+              >
+                Limpiar filtros
+              </Button>
+            </div>
+          )}
         </div>
         <Table>
           <TableHeader>

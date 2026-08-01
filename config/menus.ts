@@ -2042,6 +2042,11 @@ export const menusConfig = {
             icon: Map2,
           },
           {
+            title: "Mapeo de Servicios",
+            href: "/mapeo-servicios",
+            icon: ClipBoard,
+          },
+          {
             title: "Auditoría",
             href: "/audit-logs",
             icon: Note3,

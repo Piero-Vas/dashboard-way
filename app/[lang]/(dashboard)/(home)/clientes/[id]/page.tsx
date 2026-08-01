@@ -113,7 +113,7 @@ const ClientesByIdPage = () => {
                     Historial de Viajes
                   </h2>
                 </div>
-                <UserTripTable id={Number(id)} role="passenger"></UserTripTable>
+                <UserTripTable id={user?.id ? Number(user.id) : Number(id)} role="passenger"></UserTripTable>
               </CardContent>
             </Card>
           </div>

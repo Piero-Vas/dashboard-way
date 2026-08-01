@@ -462,7 +462,7 @@ const ConductoresByIdPage = () => {
                     Historial de Viajes
                   </h2>
                 </div>
-                <UserTripTable id={Number(id)} role="passenger"></UserTripTable>
+                <UserTripTable id={driver?.userId ? Number(driver.userId) : Number(id)} role="driver"></UserTripTable>
               </CardContent>
             </Card>
 
@@ -480,7 +480,7 @@ const ConductoresByIdPage = () => {
                     Historial de recargas
                   </h2>
                 </div>
-                <UserRetirtosTable></UserRetirtosTable>
+                <UserRetirtosTable userId={driver?.userId ? Number(driver.userId) : Number(id)}></UserRetirtosTable>
               </CardContent>
             </Card>
           </div>

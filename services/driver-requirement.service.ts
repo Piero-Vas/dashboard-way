@@ -237,3 +237,14 @@ export const fetchAdminRechargeWallet = async (
   };
   return apiClientPost(`/wallet/admin/rechargeDirect`, dataSend);
 };
+
+export const fetchDriverWalletTransactions = async (idUser: number): Promise<any> => {
+  return apiClientGet<any>(`/wallet-transaction`, {
+    params: {
+      idUser,
+      page: 1,
+      limit: 100,
+    },
+  });
+};
+
