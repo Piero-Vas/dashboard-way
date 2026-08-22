@@ -11,6 +11,7 @@ export const useFetchAllTripsByUser = (id: number, role: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
   useEffect(() => {
+    if (!id || isNaN(id)) return;
     const loadDriverRequirement = async () => {
       setLoading(true);
       try {
@@ -26,7 +27,7 @@ export const useFetchAllTripsByUser = (id: number, role: string) => {
     };
 
     loadDriverRequirement();
-  }, []);
+  }, [id, role]);
 
   return { trips, loading, error };
 };

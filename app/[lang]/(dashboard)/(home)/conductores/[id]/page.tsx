@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import UserRetirtosTable from "../../../(tables)/tailwindui-table/user-retiros-table";
 import UserTripTable from "../../../(tables)/tailwindui-table/user-trips-table";
+import { useFetchAllTripsByUser } from "@/hooks/use-fetch-user-requirement";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -38,6 +39,33 @@ const ConductoresByIdPage = () => {
     loading: vehicleLoading,
     error: vehicleError,
   } = useFetchVehicleById(Number(driver?.vehicleId));
+
+  const targetDriverUserId = driver?.userId ? Number(driver.userId) : Number(id);
+  const { trips: driverTripsData } = useFetchAllTripsByUser(targetDriverUserId, "driver");
+
+  const rawRating = user?.ratingAverageDriver;
+  const ratingText = typeof rawRating === "number" && rawRating > 0
+    ? `${rawRating.toFixed(1)} / 5`
+    : "5.0 / 5";
+
+  const allDriverTrips = driverTripsData?.trips || [];
+  const totalTripsCount = driverTripsData?.total ?? allDriverTrips.length;
+
+  const cancelledTripsCount = allDriverTrips.filter((t: any) =>
+    t.tripState?.toLowerCase().includes("cancel")
+  ).length;
+
+  const completedTripsCount = driverTripsData?.total !== undefined && allDriverTrips.length === 0
+    ? driverTripsData.total
+    : (allDriverTrips.length > 0 ? Math.max(0, totalTripsCount - cancelledTripsCount) : 0);
+
+  const acceptancePercentage = totalTripsCount > 0
+    ? Math.min(100, Math.max(0, Math.round(((totalTripsCount - cancelledTripsCount) / totalTripsCount) * 100)))
+    : 100;
+
+  const cancellationPercentage = totalTripsCount > 0
+    ? ((cancelledTripsCount / totalTripsCount) * 100).toFixed(1)
+    : "0.0";
 
   const handleInhabilitarDriver = async () => {
     if (!id || !inhabilitarReason.trim()) return;
@@ -360,19 +388,19 @@ const ConductoresByIdPage = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                   <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
                     <span className="text-xs text-muted-foreground block font-medium">Calificación</span>
-                    <span className="text-xl font-bold text-primary">⭐ 4.9 / 5</span>
+                    <span className="text-xl font-bold text-primary">⭐ {ratingText}</span>
                   </div>
                   <div className="p-3 bg-success/5 rounded-lg border border-success/20">
                     <span className="text-xs text-muted-foreground block font-medium">Aceptación</span>
-                    <span className="text-xl font-bold text-success">96%</span>
+                    <span className="text-xl font-bold text-success">{acceptancePercentage}%</span>
                   </div>
                   <div className="p-3 bg-info/5 rounded-lg border border-info/20">
                     <span className="text-xs text-muted-foreground block font-medium">Completados</span>
-                    <span className="text-xl font-bold text-info">124 viajes</span>
+                    <span className="text-xl font-bold text-info">{completedTripsCount} viajes</span>
                   </div>
                   <div className="p-3 bg-warning/5 rounded-lg border border-warning/20">
                     <span className="text-xs text-muted-foreground block font-medium">Cancelación</span>
-                    <span className="text-xl font-bold text-warning">2.4%</span>
+                    <span className="text-xl font-bold text-warning">{cancellationPercentage}%</span>
                   </div>
                 </div>
               </CardContent>
