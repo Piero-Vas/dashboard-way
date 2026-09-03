@@ -29,6 +29,7 @@ import {
 
 export default function MapeoServiciosPage() {
   const [trips, setTrips] = useState<any[]>([]);
+  const [totalReal, setTotalReal] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
@@ -48,8 +49,10 @@ export default function MapeoServiciosPage() {
 
       const rawList =
         res?.data?.trips || res?.trips || (Array.isArray(res) ? res : []);
+      const totalFromApi = res?.data?.total ?? res?.total ?? (Array.isArray(rawList) ? rawList.length : 0);
 
       setTrips(Array.isArray(rawList) ? rawList : []);
+      setTotalReal(totalFromApi);
     } catch (err) {
       console.error("Error al cargar mapeo de servicios:", err);
     } finally {
@@ -102,7 +105,10 @@ export default function MapeoServiciosPage() {
     return matchesDate && matchesStatus && matchesSearch;
   });
 
-  const totalCount = filteredTrips.length;
+  const totalCount =
+    !searchTerm && !selectedDate && statusFilter === "ALL" && totalReal > 0
+      ? totalReal
+      : filteredTrips.length;
   const searchingCount = filteredTrips.filter((t) => {
     const s = (t.tripState || "").toUpperCase();
     return s === "SEARCHING" || s === "CREATED";

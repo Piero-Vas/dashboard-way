@@ -84,38 +84,48 @@ const ViajePage = () => {
       </div>
 
       {/* Información del conductor */}
-      <div className="flex items-center mt-4 space-x-4">
-        <img
-          src={trips?.driverUser!.profilePictureUrl!}
-          alt="Conductor"
-          className="w-12 h-12 rounded-full"
-        />
-        <div>
-          <p className="text-lg font-medium">
-            {trips?.driverUser!.firstName} {trips?.driverUser!.lastName}
-          </p>
-          <p>⭐ {trips?.driverUser!.ratingAverageDriver}</p>
+      {trips?.driverUser ? (
+        <div className="flex items-center mt-4 space-x-4">
+          <img
+            src={trips.driverUser.profilePictureUrl || "/images/avatar/avatar-placeholder.png"}
+            alt="Conductor"
+            className="w-12 h-12 rounded-full object-cover bg-gray-200"
+          />
+          <div>
+            <p className="text-lg font-medium">
+              {trips.driverUser.firstName} {trips.driverUser.lastName}
+            </p>
+            <p>⭐ {trips.driverUser.ratingAverageDriver ?? "5.0"}</p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md mt-4 text-sm">
+          ⚠️ Viaje cancelado o sin conductor asignado.
+        </div>
+      )}
 
       {/* Información del vehículo */}
-      <div className="bg-gray-100 p-4 rounded-md mt-4">
-        <p>
-          🚗 <strong>Placa:</strong> {trips?.vehicle?.plateNumber}
-        </p>
-        <p>
-          🎨 <strong>Color:</strong> {trips?.vehicle?.vehicleColor}
-        </p>
-        <p>
-          🚘 <strong>Modelo:</strong> {trips?.vehicle?.vehicleModel.name}{" "}
-          {trips?.vehicle?.vehicleMake.name}
-        </p>
-      </div>
+      {trips?.vehicle && (
+        <div className="bg-gray-100 p-4 rounded-md mt-4">
+          <p>
+            🚗 <strong>Placa:</strong> {trips.vehicle.plateNumber}
+          </p>
+          <p>
+            🎨 <strong>Color:</strong> {trips.vehicle.vehicleColor}
+          </p>
+          <p>
+            🚘 <strong>Modelo:</strong> {trips.vehicle.vehicleModel?.name}{" "}
+            {trips.vehicle.vehicleMake?.name}
+          </p>
+        </div>
+      )}
 
       {/* Botón de acción */}
-      <Button className="mt-4 w-full bg-blue-600 text-white">
-        Contactar al conductor
-      </Button>
+      {trips?.driverUser && (
+        <Button className="mt-4 w-full bg-blue-600 text-white">
+          Contactar al conductor
+        </Button>
+      )}
     </div>
   );
 };
