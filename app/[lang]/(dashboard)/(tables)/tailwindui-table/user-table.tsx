@@ -56,6 +56,9 @@ const DriverAllTable: React.FC<
   const [rechargeDescription, setRechargeDescription] = useState("Recarga por Plin / Yape (Fuera de App)");
   const [isRecharging, setIsRecharging] = useState(false);
 
+  const [openIncompleteModal, setOpenIncompleteModal] = useState(false);
+  const [selectedIncompleteDriver, setSelectedIncompleteDriver] = useState<Driver | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -63,6 +66,28 @@ const DriverAllTable: React.FC<
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
+
+  const getDriverStateBadge = (stateRaw?: string) => {
+    const s = (stateRaw || "ACTIVE").toUpperCase();
+    switch (s) {
+      case "ACTIVE":
+        return <Badge variant="soft" color="success" className="rounded-md">Activo</Badge>;
+      case "PENDING":
+        return <Badge variant="soft" color="warning" className="rounded-md">Pendiente Aprobación</Badge>;
+      case "INIT_DOCUMENTS":
+        return <Badge variant="soft" className="rounded-md border border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Docs. Pendientes (App)</Badge>;
+      case "INIT_VEHICLE":
+        return <Badge variant="soft" className="rounded-md border border-slate-300 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Vehículo Pendiente</Badge>;
+      case "INACTIVE":
+        return <Badge variant="soft" color="destructive" className="rounded-md">Inhabilitado</Badge>;
+      case "SUSPENDED":
+        return <Badge variant="soft" color="destructive" className="rounded-md">Suspendido</Badge>;
+      case "REJECTED":
+        return <Badge variant="soft" color="destructive" className="rounded-md">Rechazado</Badge>;
+      default:
+        return <Badge variant="soft" color="info" className="rounded-md">{s}</Badge>;
+    }
+  };
 
   const filteredDrivers = drivers
     .filter((d) => {
@@ -73,8 +98,13 @@ const DriverAllTable: React.FC<
       const matchesSearch =
         !term || fullName.includes(term) || state.includes(term) || userIdStr.includes(term);
 
+      const sUpper = (d.state || "ACTIVE").toUpperCase();
       const matchesStatus =
-        statusFilter === "ALL" || (d.state || "ACTIVE").toUpperCase() === statusFilter;
+        statusFilter === "ALL" ||
+        (statusFilter === "INCOMPLETE" && (sUpper === "INIT_DOCUMENTS" || sUpper === "INIT_VEHICLE")) ||
+        (statusFilter === "ACTIVE" && sUpper === "ACTIVE") ||
+        (statusFilter === "PENDING" && sUpper === "PENDING") ||
+        (statusFilter === "INACTIVE" && (sUpper === "INACTIVE" || sUpper === "SUSPENDED" || sUpper === "REJECTED"));
 
       const dateVal =
         d.createdAt || d.user?.createdAt || (d as any).created_at || (d.user as any)?.created_at;
@@ -83,6 +113,7 @@ const DriverAllTable: React.FC<
         const dTime = new Date(dateVal).getTime();
         if (startDate) {
           const startTime = new Date(startDate).getTime();
+
           if (dTime < startTime) matchesDate = false;
         }
         if (endDate) {
@@ -255,10 +286,11 @@ const DriverAllTable: React.FC<
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">Todos los Estados</SelectItem>
-                  <SelectItem value="ACTIVE">Activo / Aprobado</SelectItem>
-                  <SelectItem value="PENDING">Pendiente</SelectItem>
-                  <SelectItem value="INACTIVE">Inhabilitado</SelectItem>
+                  <SelectItem value="ALL">Todos los Estados ({drivers.length})</SelectItem>
+                  <SelectItem value="ACTIVE">Activos / Aprobados</SelectItem>
+                  <SelectItem value="PENDING">Pendientes Aprobación</SelectItem>
+                  <SelectItem value="INCOMPLETE">Docs / Vehículo Pendientes (INIT)</SelectItem>
+                  <SelectItem value="INACTIVE">Inhabilitados / Suspendidos</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -345,13 +377,7 @@ const DriverAllTable: React.FC<
                 </TableCell>
 
                 <TableCell>
-                  <Badge
-                    variant="soft"
-                    color={item.state === "INACTIVE" || item.state === "REJECTED" ? "destructive" : "success"}
-                    className="capitalize rounded-md"
-                  >
-                    {item.state || "Activo"}
-                  </Badge>
+                  {getDriverStateBadge(item.state)}
                 </TableCell>
 
                 <TableCell className="ltr:pr-5 rtl:pl-5">
@@ -372,30 +398,60 @@ const DriverAllTable: React.FC<
                       <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                       <DropdownMenuSeparator />
 
-                      <Link href={`/conductores/${item.id}`}>
-                        <DropdownMenuItem preventClose>
-                          <Icon
-                            icon={getIconModalDialog(ActionModalDialog.VIEW)}
-                            className=" h-4 w-4 mr-2 "
-                          />
-                          {ActionModalDialog.VIEW}
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href={`/conductores/editar/${item.id}`}>
-                        <DropdownMenuItem preventClose>
-                          <Icon
-                            icon={getIconModalDialog(ActionModalDialog.EDIT)}
-                            className=" h-4 w-4 mr-2 "
-                          />
-                          {ActionModalDialog.EDIT}
-                        </DropdownMenuItem>
-                      </Link>
-                      <Link href={`/vehiculos/editar/${item.vehicleId}`}>
-                        <DropdownMenuItem preventClose>
+                      {((item.state || "").toUpperCase() === "INIT_DOCUMENTS" || (item.state || "").toUpperCase() === "INIT_VEHICLE") ? (
+                        <>
+                          <DropdownMenuItem
+                            preventClose
+                            onClick={() => {
+                              setSelectedIncompleteDriver(item);
+                              setOpenIncompleteModal(true);
+                            }}
+                            className="text-amber-600 focus:text-amber-700 cursor-pointer"
+                          >
+                            <Icon icon="heroicons:information-circle" className="h-4 w-4 mr-2" />
+                            Ver Estado (Incompleto)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
+                            <Icon icon={getIconModalDialog(ActionModalDialog.EDIT)} className="h-4 w-4 mr-2" />
+                            Editar (Bloqueado)
+                          </DropdownMenuItem>
+                        </>
+                      ) : (
+                        <>
+                          <Link href={`/conductores/${item.id}`}>
+                            <DropdownMenuItem preventClose>
+                              <Icon
+                                icon={getIconModalDialog(ActionModalDialog.VIEW)}
+                                className=" h-4 w-4 mr-2 "
+                              />
+                              {ActionModalDialog.VIEW}
+                            </DropdownMenuItem>
+                          </Link>
+                          <Link href={`/conductores/editar/${item.id}`}>
+                            <DropdownMenuItem preventClose>
+                              <Icon
+                                icon={getIconModalDialog(ActionModalDialog.EDIT)}
+                                className=" h-4 w-4 mr-2 "
+                              />
+                              {ActionModalDialog.EDIT}
+                            </DropdownMenuItem>
+                          </Link>
+                        </>
+                      )}
+
+                      {item.vehicleId ? (
+                        <Link href={`/vehiculos/editar/${item.vehicleId}`}>
+                          <DropdownMenuItem preventClose>
+                            <Car className=" h-4 w-4 mr-2 " />
+                            Editar Vehiculo
+                          </DropdownMenuItem>
+                        </Link>
+                      ) : (
+                        <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
                           <Car className=" h-4 w-4 mr-2 " />
-                          Editar Vehiculo
+                          Sin Vehículo Asignado
                         </DropdownMenuItem>
-                      </Link>
+                      )}
                       <DropdownMenuItem
                         preventClose
                         onClick={() => {
@@ -506,6 +562,38 @@ const DriverAllTable: React.FC<
               onClick={handleConfirmRecharge}
             >
               {isRecharging ? "Recargando..." : "Confirmar Recarga"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Informativo para Conductores Incompletos */}
+      <Dialog open={openIncompleteModal} onOpenChange={setOpenIncompleteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <Icon icon="heroicons:exclamation-triangle" className="h-5 w-5" />
+              Registro Incompleto (Docs. Pendientes)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs sm:text-sm">
+            <p className="text-muted-foreground">
+              Este usuario inició el proceso de registro como conductor en la aplicación móvil, pero <strong>aún no ha subido su documentación obligatoria</strong> (Brevete, SOAT, Antecedentes) ni finalizado los datos de su vehículo.
+            </p>
+            <div className="bg-muted/50 p-3 rounded-lg space-y-1.5 text-xs border border-border">
+              <p><strong className="text-foreground">Conductor:</strong> {selectedIncompleteDriver?.user?.firstName} {selectedIncompleteDriver?.user?.lastName}</p>
+              <p><strong className="text-foreground">ID Conductor:</strong> #{selectedIncompleteDriver?.id} <span className="text-muted-foreground">(User ID: #{selectedIncompleteDriver?.userId})</span></p>
+              <p><strong className="text-foreground">Teléfono:</strong> {selectedIncompleteDriver?.user?.mobile || "Sin teléfono"}</p>
+              <p><strong className="text-foreground">Correo:</strong> {selectedIncompleteDriver?.user?.email || "Sin correo"}</p>
+              <p><strong className="text-foreground">Estado Actual:</strong> <span className="font-mono text-amber-600 font-bold">{selectedIncompleteDriver?.state}</span></p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Por este motivo no cuenta con expediente completo para visualizar ni editar. El perfil completo se habilitará automáticamente una vez que el conductor envíe sus documentos desde la App y pase al estado <em>Pendiente de Aprobación</em>.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setOpenIncompleteModal(false)}>
+              Entendido
             </Button>
           </DialogFooter>
         </DialogContent>

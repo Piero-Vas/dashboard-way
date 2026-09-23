@@ -92,11 +92,34 @@ const ConductoresByIdPage = () => {
   };
 
   if (loading || driverLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-muted-foreground gap-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-sm">Cargando perfil del conductor...</p>
+      </div>
+    );
   }
+
   if (error || driverError) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="max-w-xl mx-auto p-6 space-y-4">
+        <Card className="p-6 border-destructive/20 bg-destructive/5 text-center space-y-3">
+          <h2 className="text-lg font-bold text-destructive">Expediente no disponible</h2>
+          <p className="text-sm text-muted-foreground">
+            Este conductor se encuentra en estado de registro incompleto (Docs. Pendientes) o no cuenta con expediente activo.
+          </p>
+          <div className="pt-2">
+            <Link href="/conductores">
+              <Button variant="outline" size="sm">
+                Volver a la lista de Conductores
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
   }
+
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>

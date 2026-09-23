@@ -25,6 +25,8 @@ import {
   XCircle,
   MapPin,
   Phone,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 export default function MapeoServiciosPage() {
@@ -35,15 +37,17 @@ export default function MapeoServiciosPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(50);
 
-  const loadDailyTrips = useCallback(async () => {
+  const loadDailyTrips = useCallback(async (pageToLoad = currentPage, limitToLoad = pageSize) => {
     try {
       setLoading(true);
       const res: any = await apiClientGet("/trip/history", {
         params: {
           role: "driver",
-          page: 1,
-          limit: 200,
+          page: pageToLoad,
+          limit: limitToLoad,
         },
       });
 
@@ -58,11 +62,11 @@ export default function MapeoServiciosPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
-    loadDailyTrips();
-  }, [loadDailyTrips, selectedDate]);
+    loadDailyTrips(currentPage, pageSize);
+  }, [loadDailyTrips, currentPage, pageSize, selectedDate]);
 
   useEffect(() => {
     if (!autoRefresh) return;
@@ -192,7 +196,7 @@ export default function MapeoServiciosPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadDailyTrips}
+            onClick={() => loadDailyTrips(currentPage, pageSize)}
             disabled={loading}
             className="flex items-center gap-2 text-xs"
           >
@@ -430,6 +434,75 @@ export default function MapeoServiciosPage() {
             )}
           </TableBody>
         </Table>
+
+        {/* Barra de Paginación */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-border text-xs">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span>
+              Mostrando {filteredTrips.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} -{" "}
+              {Math.min(currentPage * pageSize, totalReal)} de{" "}
+              <strong className="text-foreground">{totalReal}</strong> servicios históricos registrados
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">Por pág:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  const newSize = Number(e.target.value);
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                  loadDailyTrips(1, newSize);
+                }}
+                className="h-8 rounded border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value={25}>25 por página</option>
+                <option value={50}>50 por página</option>
+                <option value={100}>100 por página</option>
+                <option value={200}>200 por página</option>
+                <option value={500}>500 por página</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                disabled={currentPage <= 1 || loading}
+                onClick={() => {
+                  const prev = Math.max(1, currentPage - 1);
+                  setCurrentPage(prev);
+                  loadDailyTrips(prev, pageSize);
+                }}
+                title="Página Anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <span className="px-2 text-xs font-semibold text-foreground">
+                Pág. {currentPage} de {Math.max(1, Math.ceil(totalReal / pageSize))}
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                disabled={currentPage >= Math.ceil(totalReal / pageSize) || loading}
+                onClick={() => {
+                  const next = currentPage + 1;
+                  setCurrentPage(next);
+                  loadDailyTrips(next, pageSize);
+                }}
+                title="Página Siguiente"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </Card>
     </div>
   );

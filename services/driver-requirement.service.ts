@@ -241,10 +241,12 @@ export const fetchAdminRechargeWallet = async (
 export const fetchDriverWalletTransactions = async (idUser: number): Promise<any> => {
   return apiClientGet<any>(`/wallet-transaction`, {
     params: {
+      userId: idUser,
       idUser,
       page: 1,
       limit: 100,
     },
   });
 };
+
 

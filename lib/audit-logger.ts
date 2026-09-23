@@ -11,6 +11,8 @@ export interface AuditEntry {
   reason: string;
   date: string;
   type: "delete" | "edit" | "disable" | "recharge";
+  amount?: number | string;
+  method?: string;
 }
 
 const initialMockLogs: AuditEntry[] = [
@@ -33,6 +35,8 @@ const initialMockLogs: AuditEntry[] = [
     reason: "Recarga abonada por Yape fuera de App (S/ 50.00)",
     date: "2026-07-20 10:45",
     type: "recharge",
+    amount: "50.00",
+    method: "Yape",
   },
   {
     id: "103",
