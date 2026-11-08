@@ -19,6 +19,7 @@ interface UserRetirtosTableProps {
 const UserRetirtosTable: React.FC<UserRetirtosTableProps> = ({ userId }) => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!userId) return;
@@ -27,7 +28,14 @@ const UserRetirtosTable: React.FC<UserRetirtosTableProps> = ({ userId }) => {
       try {
         const res: any = await fetchDriverWalletTransactions(userId);
         const dataList = res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
-        setTransactions(Array.isArray(dataList) ? dataList : []);
+        const list: any[] = Array.isArray(dataList) ? [...dataList] : [];
+        // Mas recientes primero
+        list.sort(
+          (a, b) =>
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime()
+        );
+        setTransactions(list);
       } catch (err) {
         console.error("Error cargando transacciones de billetera:", err);
       } finally {
@@ -35,7 +43,11 @@ const UserRetirtosTable: React.FC<UserRetirtosTableProps> = ({ userId }) => {
       }
     };
     loadTransactions();
-  }, [userId]);
+    // Refresca al volver a la pestana (p.ej. tras una recarga directa)
+    const onFocus = () => loadTransactions();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [userId, refreshKey]);
 
   const columns: { key: string; label: string }[] = [
     { key: "fecha", label: "Fecha Recarga" },
@@ -45,6 +57,15 @@ const UserRetirtosTable: React.FC<UserRetirtosTableProps> = ({ userId }) => {
 
   return (
     <Card>
+      <div className="flex justify-end p-2">
+        <button
+          type="button"
+          className="text-xs text-primary hover:underline"
+          onClick={() => setRefreshKey((k) => k + 1)}
+        >
+          Actualizar
+        </button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>

@@ -44,7 +44,7 @@ export default function DriverMapPage() {
         </Button>
       </div>
 
-      {loading ? (
+      {loading && drivers.length === 0 ? (
         <div className="w-full h-[600px] flex flex-col items-center justify-center bg-muted/20 rounded-xl border border-border">
           <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
           <p className="text-sm text-muted-foreground font-medium">Consultando conductores...</p>

@@ -1,5 +1,5 @@
 "use client";
-import { getAccessToken } from "@/app/[lang]/(dashboard)/(home)/constants";
+import { api } from "@/config/axios.config";
 import VehicleMarkModelModals from "@/app/[lang]/(dashboard)/(home)/marca-vehiculos/components/VehicleMarkModelModals";
 import DialogConfirm from "@/app/[lang]/(dashboard)/components/dialog-basic";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,6 @@ import { Fragment, useEffect, useState } from "react";
 type Make = { id: number; name: string };
 type Model = { id: number; name: string; makeId: number };
 
-const keyRide = getAccessToken();
-
 const VehicleTableMarkModel = () => {
   const [makes, setMakes] = useState<Make[]>([]);
   const [collapsedRows, setCollapsedRows] = useState<number[]>([]);
@@ -31,19 +29,23 @@ const VehicleTableMarkModel = () => {
     id: number;
   } | null>(null);
 
-  const refreshMakes = () => {
-    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`)
-      .then((res) => res.json())
-      .then((data) => {
-        setMakes(data.data || []);
+  const loadMakes = async (reset: boolean) => {
+    try {
+      const { data } = await api.get("/vehicle-make");
+      setMakes(data?.data || []);
+      if (reset) {
         setModelsByMake({}); // Limpia los modelos cargados
         setCollapsedRows([]); // Cierra todas las filas colapsadas
-      });
+      }
+    } catch (error) {
+      console.error("Error al cargar las marcas:", error);
+    }
+  };
+  const refreshMakes = () => {
+    loadMakes(true);
   };
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`)
-      .then((res) => res.json())
-      .then((data) => setMakes(data.data || []));
+    loadMakes(false);
   }, []);
 
   const toggleRow = async (id: number) => {
@@ -53,15 +55,19 @@ const VehicleTableMarkModel = () => {
       setCollapsedRows([...collapsedRows, id]);
       if (!modelsByMake[id]) {
         setLoadingModels(id);
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-model?makeId=${id}`
-        );
-        const data = await res.json();
-        setModelsByMake((prev) => ({
-          ...prev,
-          [id]: data.data || [],
-        }));
-        setLoadingModels(null);
+        try {
+          const { data } = await api.get("/vehicle-model", {
+            params: { makeId: id },
+          });
+          setModelsByMake((prev) => ({
+            ...prev,
+            [id]: data?.data || [],
+          }));
+        } catch (error) {
+          console.error("Error al cargar los modelos:", error);
+        } finally {
+          setLoadingModels(null);
+        }
       }
     }
   };
@@ -74,39 +80,18 @@ const VehicleTableMarkModel = () => {
   const handleConfirmDelete = async () => {
     if (!selectedDelete) return;
     if (selectedDelete.type === "make" && modelsByMake) {
-      console.log("ID de la marca eliminada:", selectedDelete.id);
       const makeId = Object.keys(modelsByMake).find((makeId) =>
         modelsByMake[Number(makeId)]?.some((m) => m.id === selectedDelete.id)
       );
       try {
-        await fetch(
-          `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make/${selectedDelete.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${keyRide}`,
-            },
-          }
-        );
+        await api.delete(`/vehicle-make/${selectedDelete.id}`);
         refreshMakes();
       } catch (error) {
         console.error("Error al eliminar la marca:", error);
       }
     } else {
-      console.log("ID del modelo eliminado:", selectedDelete.id);
       try {
-        const rest = await fetch(
-          `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-model/${selectedDelete.id}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${keyRide}`,
-            },
-          }
-        );
-        console.log(rest);
+        await api.delete(`/vehicle-model/${selectedDelete.id}`);
         refreshMakes();
       } catch (error) {
         console.error("Error al eliminar el modelo:", error);

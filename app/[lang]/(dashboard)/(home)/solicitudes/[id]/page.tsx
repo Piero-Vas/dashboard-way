@@ -7,7 +7,7 @@ import { useTextStore } from "@/store";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getAccessToken } from "../../constants";
+import { api } from "@/config/axios.config";
 type DriverApiResponse = {
   status: string;
   data: DriverData;
@@ -76,11 +76,9 @@ type VehicleApiResponse = {
   };
 };
 
-const keyRide = getAccessToken();
 const SolicitudPage = () => {
   const params = useParams();
   const idDriver = params.id as string;
-  const token = keyRide;
 
   const [driverData, setDriverData] = useState<DriverData | null>(null);
   const [loadingDriver, setLoadingDriver] = useState(true);
@@ -95,54 +93,55 @@ const SolicitudPage = () => {
 
   useEffect(() => {
     if (!idDriver) return;
-    setLoadingDriver(true);
-    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/driver/${idDriver}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data: DriverApiResponse) => {
+    let cancelled = false;
+    const load = async () => {
+      setLoadingDriver(true);
+      try {
+        const { data } = await api.get<DriverApiResponse>(`/driver/${idDriver}`);
+        if (cancelled) return;
         setDriverData(data.data);
         if (data.data?.userId) {
           setLoadingUser(true);
-          fetch(
-            `${process.env.NEXT_PUBLIC_SITE_URL}/user/${data.data.userId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
-            .then((res) => res.json())
-            .then((user: UserApiResponse) => setUserData(user.data))
-            .finally(() => setLoadingUser(false));
+          try {
+            const { data: user } = await api.get<UserApiResponse>(
+              `/user/${data.data.userId}`
+            );
+            if (!cancelled) setUserData(user.data);
+          } catch (error) {
+            console.error("Error al cargar el usuario:", error);
+          } finally {
+            if (!cancelled) setLoadingUser(false);
+          }
         }
-      })
-      .finally(() => setLoadingDriver(false));
+      } catch (error) {
+        console.error("Error al cargar el conductor:", error);
+      } finally {
+        if (!cancelled) setLoadingDriver(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [idDriver]);
 
   useEffect(() => {
     if (!driverData?.vehicleId) return;
+    let cancelled = false;
     setLoadingVehicle(true);
-    fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/vehicle/${driverData.vehicleId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
-      .then((res) => res.json())
-      .then((data: VehicleApiResponse) => setVehicleData(data.data))
-      .finally(() => setLoadingVehicle(false));
+    api
+      .get<VehicleApiResponse>(`/vehicle/${driverData.vehicleId}`)
+      .then(({ data }) => {
+        if (!cancelled) setVehicleData(data.data);
+      })
+      .catch((error) => console.error("Error al cargar el vehículo:", error))
+      .finally(() => {
+        if (!cancelled) setLoadingVehicle(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [driverData?.vehicleId]);
-
-  console.log("driverData", driverData);
-
-  console.log(vehicleData);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>

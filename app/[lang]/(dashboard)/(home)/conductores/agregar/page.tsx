@@ -3,19 +3,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { initializeApp } from "firebase/app";
+import { app } from "@/firebaseClient";
 import ModernStepForm from "../../../(forms)/form-wizard/modern-stepform";
 
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
-
-const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 
 export default function RegistroConductor() {

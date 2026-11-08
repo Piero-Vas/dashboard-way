@@ -22,7 +22,6 @@ import twitter from "@/public/images/auth/twitter.png";
 import GithubIcon from "@/public/images/auth/github.png";
 
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { initializeApp, getApps, getApp } from "firebase/app";
 
 const schema = z.object({
   email: z.string().email({ message: "Tu correo no es valido" }),
@@ -60,15 +59,19 @@ const LogInForm = () => {
 
   const auth = getAuth(app);
   const onSubmit = async (dataLogin: { email: string; password: string }) => {
-    console.log("data", dataLogin);
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      dataLogin.email,
-      dataLogin.password
-    );
-    const user = userCredential.user;
-    const idToken = await user.getIdToken();
-    console.log("✅ Token de Firebase:", idToken);
+    let idToken: string;
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        dataLogin.email,
+        dataLogin.password
+      );
+      idToken = await userCredential.user.getIdToken();
+    } catch (error) {
+      console.error("Error de autenticación con Firebase");
+      toast.error("Correo o contraseña incorrectos");
+      return;
+    }
 
     const dataFetch = {
       idToken: idToken,
@@ -89,7 +92,10 @@ const LogInForm = () => {
       },
       body: JSON.stringify(dataFetch),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
       .then((data) => {
         if (data?.data?.accessToken) {
           localStorage.setItem("accessToken", data.data.accessToken);
@@ -113,7 +119,8 @@ const LogInForm = () => {
         });
       })
       .catch((error) => {
-        console.error("Error:", error);
+        console.error("Error al iniciar sesión:", error);
+        toast.error("No se pudo iniciar sesión. Inténtalo de nuevo.");
       });
   };
   return (

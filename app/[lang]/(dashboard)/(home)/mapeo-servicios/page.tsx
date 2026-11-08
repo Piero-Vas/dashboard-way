@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { apiClientGet } from "@/services/api-client.service";
 import Link from "next/link";
+import { exportTripsCsv } from "@/lib/export-trips-csv";
 import {
   RefreshCw,
   Search,
@@ -27,6 +28,7 @@ import {
   Phone,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 
 export default function MapeoServiciosPage() {
@@ -40,41 +42,72 @@ export default function MapeoServiciosPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(50);
 
-  const loadDailyTrips = useCallback(async (pageToLoad = currentPage, limitToLoad = pageSize) => {
+  const [exporting, setExporting] = useState(false);
+  const [exportFrom, setExportFrom] = useState("");
+  const [exportTo, setExportTo] = useState("");
+
+  // Evita que respuestas viejas (polling + clic manual) pisen a las nuevas y reordenen/dupliquen filas
+  const requestSeq = useRef(0);
+  const pageRef = useRef({ page: 1, size: 50 });
+  pageRef.current = { page: currentPage, size: pageSize };
+
+  const loadDailyTrips = useCallback(async (silent = false) => {
+    const seq = ++requestSeq.current;
+    const { page, size } = pageRef.current;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res: any = await apiClientGet("/trip/history", {
-        params: {
-          role: "driver",
-          page: pageToLoad,
-          limit: limitToLoad,
-        },
+        params: { role: "driver", page, limit: size },
       });
 
       const rawList =
         res?.data?.trips || res?.trips || (Array.isArray(res) ? res : []);
       const totalFromApi = res?.data?.total ?? res?.total ?? (Array.isArray(rawList) ? rawList.length : 0);
+      if (seq !== requestSeq.current) return; // respuesta obsoleta
 
-      setTrips(Array.isArray(rawList) ? rawList : []);
+      // Reemplaza (no agrega): dedupe por id y orden por fecha desc
+      const byId = new Map<string, any>();
+      (Array.isArray(rawList) ? rawList : []).forEach((t: any) => {
+        byId.set(String(t.id), t);
+      });
+      const sorted = Array.from(byId.values()).sort(
+        (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      );
+      setTrips(sorted);
       setTotalReal(totalFromApi);
     } catch (err) {
       console.error("Error al cargar mapeo de servicios:", err);
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, []);
 
+  // Carga al cambiar pagina / tamanio (una sola vez por cambio)
   useEffect(() => {
-    loadDailyTrips(currentPage, pageSize);
-  }, [loadDailyTrips, currentPage, pageSize, selectedDate]);
+    loadDailyTrips(false);
+  }, [loadDailyTrips, currentPage, pageSize]);
 
+  // Polling silencioso: un unico intervalo, limpiado en cleanup
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
-      loadDailyTrips();
+      loadDailyTrips(true);
     }, 10000);
     return () => clearInterval(interval);
   }, [autoRefresh, loadDailyTrips]);
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const n = await exportTripsCsv({ dateFrom: exportFrom, dateTo: exportTo });
+      if (n === 0) alert("No hay servicios en el rango seleccionado.");
+    } catch (err) {
+      console.error("Error al exportar servicios:", err);
+      alert("No se pudo exportar el backup de servicios.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const filteredTrips = trips.filter((t) => {
     const tripDate = t.createdAt
@@ -196,7 +229,7 @@ export default function MapeoServiciosPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadDailyTrips(currentPage, pageSize)}
+            onClick={() => loadDailyTrips(false)}
             disabled={loading}
             className="flex items-center gap-2 text-xs"
           >
@@ -294,6 +327,23 @@ export default function MapeoServiciosPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 text-xs">
+              <span className="text-muted-foreground">Exportar desde:</span>
+              <Input type="date" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} className="h-8 text-xs w-36" />
+              <span className="text-muted-foreground">hasta:</span>
+              <Input type="date" value={exportTo} onChange={(e) => setExportTo(e.target.value)} className="h-8 text-xs w-36" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExport}
+                disabled={exporting}
+                className="h-8 text-xs px-3 flex items-center gap-1"
+                title="Descarga un CSV (backup) con todos los servicios del rango"
+              >
+                <Download className="h-4 w-4" />
+                {exporting ? "Exportando..." : "Exportar"}
+              </Button>
+            </div>
             {["ALL", "SEARCHING", "ACCEPTED", "IN_TRIP", "COMPLETED", "CANCELLED"].map(
               (st) => (
                 <Button
@@ -324,7 +374,7 @@ export default function MapeoServiciosPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID / Hora</TableHead>
+              <TableHead>ID / Fecha y hora</TableHead>
               <TableHead>Pasajero (Cliente)</TableHead>
               <TableHead>Origen → Destino</TableHead>
               <TableHead>Monto Oferta</TableHead>
@@ -334,7 +384,7 @@ export default function MapeoServiciosPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {loading && trips.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Cargando monitoreo de servicios...
@@ -349,9 +399,13 @@ export default function MapeoServiciosPage() {
             ) : (
               filteredTrips.map((item: any) => {
                 const timeCreated = item.createdAt
-                  ? new Date(item.createdAt).toLocaleTimeString("es-PE", {
+                  ? new Date(item.createdAt).toLocaleString("es-PE", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
                       hour: "2-digit",
                       minute: "2-digit",
+                      hour12: false,
                     })
                   : "N/A";
                 const passengerName =
@@ -454,7 +508,6 @@ export default function MapeoServiciosPage() {
                   const newSize = Number(e.target.value);
                   setPageSize(newSize);
                   setCurrentPage(1);
-                  loadDailyTrips(1, newSize);
                 }}
                 className="h-8 rounded border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
@@ -475,7 +528,6 @@ export default function MapeoServiciosPage() {
                 onClick={() => {
                   const prev = Math.max(1, currentPage - 1);
                   setCurrentPage(prev);
-                  loadDailyTrips(prev, pageSize);
                 }}
                 title="Página Anterior"
               >
@@ -494,7 +546,6 @@ export default function MapeoServiciosPage() {
                 onClick={() => {
                   const next = currentPage + 1;
                   setCurrentPage(next);
-                  loadDailyTrips(next, pageSize);
                 }}
                 title="Página Siguiente"
               >

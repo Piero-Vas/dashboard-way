@@ -58,9 +58,13 @@ export default function EditDataConductor() {
       console.log("Driver response:", driverResponse);
 
       window.location.href = "/conductores";
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error al guardar conductor:", err);
-      alert("No se pudo guardar la información del conductor.");
+      const msg = err?.response?.data?.message;
+      alert(
+        "No se pudo guardar la información del conductor." +
+          (msg ? "\n" + (Array.isArray(msg) ? msg.join("\n") : msg) : "")
+      );
     } finally {
       console.log("finished");
     }

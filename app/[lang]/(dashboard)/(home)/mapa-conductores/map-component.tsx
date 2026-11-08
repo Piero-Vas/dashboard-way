@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Leaflet from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -120,8 +120,11 @@ function MapBoundsController({
   devicePos: [number, number] | null;
 }) {
   const map = useMap();
+  const fittedRef = useRef(false);
 
   useEffect(() => {
+    // Ajusta el encuadre solo la primera vez con datos; en refrescos no se pierde el zoom del usuario
+    if (fittedRef.current) return;
     const points: [number, number][] = locations.map((l) => [l.lat, l.lng]);
     if (devicePos) {
       points.push(devicePos);
@@ -130,6 +133,7 @@ function MapBoundsController({
     if (points.length > 0) {
       const bounds = Leaflet.latLngBounds(points);
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      fittedRef.current = true;
     }
   }, [locations, devicePos, map]);
 
@@ -154,8 +158,11 @@ export default function RealTimeDriverMap({ drivers }: { drivers: Driver[] }) {
     }
   }, []);
 
+  const deviceIcon = useMemo(() => createDeviceMarker(), []);
+
   const driverLocations: DriverLocation[] = useMemo(() => {
-    return drivers.map((driver, index) => {
+    const seenIds = new Set<number>();
+    const list = drivers.map((driver, index) => {
       const driverId = driver.id || driver.userId || index + 1;
       const rawLat = driver.user?.latitude;
       const rawLng = driver.user?.longitude;
@@ -191,7 +198,35 @@ export default function RealTimeDriverMap({ drivers }: { drivers: Driver[] }) {
         isRealGps: isReal,
       };
     });
+
+    // Dedupe por id (clave estable para que React/Leaflet actualice el marker en lugar de recrearlo)
+    const unique = list.filter((l) => (seenIds.has(l.id) ? false : (seenIds.add(l.id), true)));
+
+    // Conductores en el mismo punto: se desplazan en circulo pequeno para que no se superpongan
+    const groups = new Map<string, DriverLocation[]>();
+    unique.forEach((l) => {
+      const key = `${l.lat.toFixed(4)},${l.lng.toFixed(4)}`;
+      groups.set(key, [...(groups.get(key) || []), l]);
+    });
+    groups.forEach((g) => {
+      if (g.length < 2) return;
+      g.forEach((l, i) => {
+        const angle = (2 * Math.PI * i) / g.length;
+        l.lat += Math.sin(angle) * 0.0004;
+        l.lng += Math.cos(angle) * 0.0004;
+      });
+    });
+    return unique;
   }, [drivers]);
+
+  const iconCache = useMemo(() => {
+    const cache = new Map<string, Leaflet.DivIcon>();
+    return (state: string, real: boolean) => {
+      const k = `${state}|${real}`;
+      if (!cache.has(k)) cache.set(k, createCustomWayMarker(state, real));
+      return cache.get(k)!;
+    };
+  }, []);
 
   return (
     <div className="w-full h-[650px] rounded-xl overflow-hidden border border-border shadow-lg relative">
@@ -209,7 +244,7 @@ export default function RealTimeDriverMap({ drivers }: { drivers: Driver[] }) {
 
         {/* Marcador de Mi Dispositivo */}
         {devicePos && (
-          <Marker position={devicePos} icon={createDeviceMarker()}>
+          <Marker position={devicePos} icon={deviceIcon}>
             <Popup className="rounded-lg shadow-lg">
               <div className="p-1 flex items-center gap-2">
                 <Navigation className="h-4 w-4 text-blue-600 animate-pulse" />
@@ -227,7 +262,7 @@ export default function RealTimeDriverMap({ drivers }: { drivers: Driver[] }) {
           <Marker
             key={loc.id}
             position={[loc.lat, loc.lng]}
-            icon={createCustomWayMarker(loc.state, loc.isRealGps)}
+            icon={iconCache(loc.state, loc.isRealGps)}
           >
             <Popup className="rounded-lg shadow-lg">
               <div className="flex flex-col gap-2 p-1 min-w-[200px]">

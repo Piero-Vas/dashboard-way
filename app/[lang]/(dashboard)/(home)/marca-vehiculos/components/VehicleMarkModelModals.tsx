@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { getAccessToken } from "../../constants";
+import { api } from "@/config/axios.config";
 
 type Make = { id: number; name: string };
 
@@ -11,8 +11,6 @@ interface Props {
   makes: Make[];
   refreshMakes: () => void;
 }
-
-const keyRide = getAccessToken();
 
 const VehicleMarkModelModals = ({ makes, refreshMakes }: Props) => {
   const [openMarca, setOpenMarca] = useState(false);
@@ -28,37 +26,38 @@ const VehicleMarkModelModals = ({ makes, refreshMakes }: Props) => {
   const handleAddMarca = async () => {
     if (!marcaNombre) return;
     setLoadingAdd(true);
-    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-make`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${keyRide}`,
-      },
-      body: JSON.stringify({ name: marcaNombre }),
-    });
-    setMarcaNombre("");
-    setOpenMarca(false);
-    setLoadingAdd(false);
-    refreshMakes();
+    try {
+      await api.post("/vehicle-make", { name: marcaNombre });
+      setMarcaNombre("");
+      setOpenMarca(false);
+      refreshMakes();
+    } catch (error) {
+      console.error("Error al agregar la marca:", error);
+      alert("No se pudo agregar la marca. Inténtalo de nuevo.");
+    } finally {
+      setLoadingAdd(false);
+    }
   };
 
   // Agregar modelo
   const handleAddModelo = async () => {
     if (!modeloNombre || !marcaSeleccionada) return;
     setLoadingAdd(true);
-    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/vehicle-model`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${keyRide}`,
-      },
-      body: JSON.stringify({ name: modeloNombre, makeId: marcaSeleccionada }),
-    });
-    setModeloNombre("");
-    setMarcaSeleccionada(undefined);
-    setOpenModelo(false);
-    setLoadingAdd(false);
-    refreshMakes();
+    try {
+      await api.post("/vehicle-model", {
+        name: modeloNombre,
+        makeId: marcaSeleccionada,
+      });
+      setModeloNombre("");
+      setMarcaSeleccionada(undefined);
+      setOpenModelo(false);
+      refreshMakes();
+    } catch (error) {
+      console.error("Error al agregar el modelo:", error);
+      alert("No se pudo agregar el modelo. Inténtalo de nuevo.");
+    } finally {
+      setLoadingAdd(false);
+    }
   };
 
   return (

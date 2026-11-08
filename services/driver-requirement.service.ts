@@ -117,17 +117,29 @@ export const fetchDataUserById = async (
   return apiClientGet<ApiResponse<User>>(`${apiRequestsUser}/${id}`);
 };
 
+// Elimina valores vacios/null/undefined: el gateway valida con whitelist y
+// reglas como @IsUrl/@IsEmail/@IsEnum, que fallan con "" (400).
+const omitEmpty = <T extends Record<string, any>>(obj: T): Partial<T> =>
+  Object.fromEntries(
+    Object.entries(obj).filter(
+      ([, v]) =>
+        v !== undefined &&
+        v !== null &&
+        !(typeof v === "string" && v.trim() === "")
+    )
+  ) as Partial<T>;
+
 export const fetchUpdateDataUserById = async (
   user: EditableUserData,
   id: number
 ): Promise<ApiResponse<User>> => {
-  const dataSend = {
+  const dataSend = omitEmpty({
     mobile: user.mobile,
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
     profilePictureUrl: user.profilePictureUrl,
-  };
+  });
 
   return apiClientPatch<ApiResponse<User>>(
     `${apiRequestsUser}/${id}`,
@@ -161,15 +173,15 @@ export const fetchUpdateDataDriverById = async (
   user: EditableDriverData,
   id: number
 ): Promise<ApiResponse<Driver>> => {
-  const dataSend = {
+  const dataSend = omitEmpty({
     profilePhotoUrl: user.profilePictureUrl,
     identityDocumentUrl: user.identityDocumentUrl,
     identityDocumentReverseUrl: user.identityDocumentReverseUrl,
     driverLicenseUrl: user.driverLicenseUrl,
     criminalRecordUrl: user.criminalRecordUrl,
-  };
+  });
 
-  return apiClientPatch<ApiResponse<Driver>>(`driver/${id}`, dataSend);
+  return apiClientPatch<ApiResponse<Driver>>(`/driver/${id}`, dataSend);
 };
 
 export const fetchDataVehicleById = async (
@@ -182,7 +194,10 @@ export const fetchUpdateVehicleData = async (
   id: number,
   data: any
 ): Promise<ApiResponse<VehicleResponse>> => {
-  return apiClientPatch<ApiResponse<VehicleResponse>>(`/vehicle/${id}`, data);
+  return apiClientPatch<ApiResponse<VehicleResponse>>(
+    `/vehicle/${id}`,
+    omitEmpty(data)
+  );
 };
 
 export const fetchVehicleMakes = async (): Promise<ApiResponse<{ id: number; name: string }[]>> => {
@@ -242,7 +257,6 @@ export const fetchDriverWalletTransactions = async (idUser: number): Promise<any
   return apiClientGet<any>(`/wallet-transaction`, {
     params: {
       userId: idUser,
-      idUser,
       page: 1,
       limit: 100,
     },
