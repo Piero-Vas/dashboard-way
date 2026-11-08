@@ -56,3 +56,58 @@ export interface EditFare {
     }
   ];
 }
+
+export interface DriversOnline {
+  online: number;
+  total: number;
+  activeInTrip: number;
+}
+
+export interface TripsToday {
+  total: number;
+  byState: Record<string, number>;
+}
+
+export interface PlatformEarningsPoint {
+  date: string;
+  platformEarnings: number;
+  tripsAmount: number;
+  bonusAmount: number;
+  trips: number;
+}
+
+export interface PlatformEarnings {
+  from: string;
+  to: string;
+  platformEarnings: number;
+  totalTripsAmount: number;
+  totalTrips: number;
+  firstTripBonusAmount: number;
+  series: PlatformEarningsPoint[];
+}
+
+export interface RechargeItem {
+  id: string;
+  amount: number;
+  description: string | null;
+  createdAt: string;
+  userId: number | null;
+  user: {
+    id: number;
+    firstName: string | null;
+    lastName: string | null;
+    mobile: string | null;
+    email: string | null;
+  } | null;
+}
+
+export interface RechargesPage {
+  data: RechargeItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    lastPage: number;
+    totalAmount: number;
+  };
+}

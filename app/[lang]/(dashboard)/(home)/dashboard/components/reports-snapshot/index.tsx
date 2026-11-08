@@ -8,49 +8,58 @@ import { themes } from "@/config/thems";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import DashboardSelect from "@/components/dasboard-select";
 import { cn } from "@/lib/utils";
-import { useFetchUserCount } from "@/hooks/use-fetch-dashboard";
+import { DashboardData } from "@/hooks/use-fetch-dashboard";
+import { MonthlySignups } from "@/types/dashboard-data.interface";
 
-const ReportsSnapshot = () => {
-  const { theme: config, setTheme: setConfig } = useThemeStore();
+interface ReportsSnapshotProps {
+  data: DashboardData;
+  loading: boolean;
+  errors: Record<string, string>;
+}
+
+const ReportsSnapshot = ({ data, loading, errors }: ReportsSnapshotProps) => {
+  const { theme: config } = useThemeStore();
   const { theme: mode } = useTheme();
   const theme = themes.find((theme) => theme.name === config);
 
-  const { monthlySignups, loading, error } = useFetchUserCount("passenger");
-
   const {
-    monthlySignups: driverSignups,
-    loading: driverLoading,
-    error: driverError,
-  } = useFetchUserCount("driver");
+    passengerSignups: monthlySignups,
+    driverSignups,
+    adminSignups,
+  } = data;
 
-  if (loading || driverLoading) {
-    return <div>Cargando...</div>;
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6 animate-pulse space-y-4">
+          <div className="h-5 w-40 bg-default-200 rounded" />
+          <div className="h-[300px] bg-default-100 rounded" />
+        </CardContent>
+      </Card>
+    );
   }
 
-  if (error || driverError) {
-    return <div>Error: {error || driverError}</div>;
-  }
+  const failed = ["passengers", "drivers", "admins"].filter((k) => errors[k]);
 
-  console.log("Drivers", driverSignups);
-  console.log("Passengers", monthlySignups);
-
-  const currentYear = new Date().getFullYear().toString();
-
-  const driversData = Array.from({ length: 12 }, (_, i) => {
-    const found = driverSignups.find(
-      (item) => Number(item.month) === i + 1 && item.year === currentYear
+  // year/month llegan como string o number segun el serializado (EXTRACT -> numeric)
+  const currentYear = new Date().getFullYear();
+  const monthlyArray = (list: MonthlySignups[]) =>
+    Array.from({ length: 12 }, (_, i) =>
+      list
+        .filter(
+          (item) =>
+            Number(item.month) === i + 1 && Number(item.year) === currentYear
+        )
+        .reduce((acc, item) => acc + Number(item.userCount || 0), 0)
     );
-    return found ? found.userCount : 0;
-  });
 
-  const customersData = Array.from({ length: 12 }, (_, i) => {
-    const found = monthlySignups.find(
-      (item) => Number(item.month) === i + 1 && item.year === currentYear
-    );
-    return found ? found.userCount : 0;
-  });
+  const driversData = monthlyArray(driverSignups);
+  const customersData = monthlyArray(monthlySignups);
+  const adminsData = monthlyArray(adminSignups);
 
-  const allUsersData = driversData.map((val, idx) => val + customersData[idx]);
+  const allUsersData = driversData.map(
+    (val, idx) => val + customersData[idx] + adminsData[idx]
+  );
 
   const allUsersSeries = [
     {
@@ -69,13 +78,14 @@ const ReportsSnapshot = () => {
   ];
   const admins = [
     {
-      data: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+      data: adminsData,
     },
   ];
 
   const driversTotal = driversData.reduce((acc, val) => acc + val, 0);
   const customersTotal = customersData.reduce((acc, val) => acc + val, 0);
-  const allUsersTotal = driversTotal + customersTotal;
+  const adminsTotal = adminsData.reduce((acc, val) => acc + val, 0);
+  const allUsersTotal = driversTotal + customersTotal + adminsTotal;
 
   const primary = `hsl(${
     theme?.cssVars[mode === "dark" ? "dark" : "light"].primary
@@ -112,7 +122,7 @@ const ReportsSnapshot = () => {
     {
       value: "newuser",
       text: "Administradores",
-      total: "1",
+      total: adminsTotal.toString(),
       color: "info",
     },
   ];
@@ -147,8 +157,13 @@ const ReportsSnapshot = () => {
               Reportes
             </div>
             <span className="text-xs text-default-600">
-              Grafico de Reportes
+              Registros de usuarios por mes ({currentYear})
             </span>
+            {failed.length > 0 && (
+              <div className="text-xs text-destructive mt-1">
+                No se pudo cargar: {failed.join(", ")}
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
