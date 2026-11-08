@@ -101,7 +101,12 @@ const UserRetirtosTable: React.FC<UserRetirtosTableProps> = ({ userId }) => {
                     {formattedDate}
                   </TableCell>
                   <TableCell>
-                    {item.description || item.type || "Recarga Manual"}
+                    {item.typeLabel && (
+                      <Badge variant="soft" color="info" className="mr-2">
+                        {item.typeLabel}
+                      </Badge>
+                    )}
+                    {item.description || (item.typeLabel ? "" : item.type || "Recarga Manual")}
                   </TableCell>
                   <TableCell className="font-semibold">
                     <Badge variant={isCredit ? "soft" : "outline"} color={isCredit ? "success" : "destructive"}>

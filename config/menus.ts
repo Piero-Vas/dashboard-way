@@ -2058,6 +2058,11 @@ export const menusConfig = {
         icon: ClipBoard,
         href: "/pagos",
       },
+      {
+        title: "Pago de bonos",
+        icon: Diamond,
+        href: "/pago-bonos",
+      },
 
       {
         title: "Vehiculos",
