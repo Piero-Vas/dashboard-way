@@ -44,7 +44,14 @@ export const fetchDriverBonuses = async (
   limit: number
 ): Promise<{ data: DriverBonus[]; meta: BonusListMeta }> => {
   const res = await api.get("/driver-bonus", { params: { status, page, limit } });
-  return { data: res.data?.data ?? [], meta: res.data?.meta ?? ({} as BonusListMeta) };
+  const payload = res.data?.data;
+  if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
+    return { data: payload.data, meta: payload.meta ?? ({} as BonusListMeta) };
+  }
+  return {
+    data: Array.isArray(payload) ? payload : [],
+    meta: res.data?.meta ?? ({} as BonusListMeta),
+  };
 };
 
 export const payDriverBonus = async (
@@ -59,7 +66,11 @@ export const payDriverBonus = async (
   const res = await api.post(`/driver-bonus/${id}/pay`, fd, {
     headers: { "Content-Type": undefined as any },
   });
-  return res.data?.data;
+  let bonus = res.data?.data;
+  if (bonus && bonus.id == null && bonus.data && typeof bonus.data === "object") {
+    bonus = bonus.data;
+  }
+  return bonus;
 };
 
 export const bonusErrorMessage = (err: any): string => {
