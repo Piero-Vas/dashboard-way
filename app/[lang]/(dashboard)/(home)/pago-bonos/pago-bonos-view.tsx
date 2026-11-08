@@ -31,6 +31,7 @@ import {
   bonusErrorMessage,
   fetchDriverBonuses,
   payDriverBonus,
+  walletLabel,
 } from "@/services/driver-bonus.service";
 
 const LIMIT = 15;
@@ -148,7 +149,7 @@ const PagoBonosView = () => {
             <TableRow>
               <TableHead>Conductor</TableHead>
               <TableHead>Monto</TableHead>
-              <TableHead>Yape solicitado</TableHead>
+              <TableHead>Pago solicitado</TableHead>
               <TableHead>Fecha de solicitud</TableHead>
               <TableHead>Viaje</TableHead>
               <TableHead>Estado</TableHead>
@@ -189,7 +190,11 @@ const PagoBonosView = () => {
                   </TableCell>
                   <TableCell className="font-semibold">{money(b.amount)}</TableCell>
                   <TableCell>
-                    <div>{b.requestedYapeNumber || "-"}</div>
+                    <div>
+                      {b.requestedYapeNumber
+                        ? `${walletLabel(b) ? walletLabel(b) + " · " : ""}${b.requestedYapeNumber}`
+                        : "-"}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {b.requestedYapeName || ""}
                     </div>
@@ -301,15 +306,16 @@ const DetailDialog = ({
             <Field label="Bono generado">{fmtDate(bonus.createdAt)}</Field>
             <Field label="Pasado a wallet">{fmtDate(bonus.movedToWalletAt)}</Field>
             <Field label="Pago solicitado">{fmtDate(bonus.requestedAt)}</Field>
-            <Field label="Yape solicitado">{bonus.requestedYapeNumber}</Field>
-            <Field label="Nombre Yape">{bonus.requestedYapeName}</Field>
+            <Field label="Entidad de pago solicitada">{walletLabel(bonus)}</Field>
+            <Field label="Número solicitado">{bonus.requestedYapeNumber}</Field>
+            <Field label="Nombre del titular">{bonus.requestedYapeName}</Field>
           </div>
           {bonus.status === "PAID" && (
             <div className="border-t pt-3">
               <div className="font-semibold mb-2">Pago realizado</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Field label="Fecha de pago">{fmtDate(bonus.paidAt)}</Field>
-                <Field label="Número yapeado">{bonus.paidToNumber}</Field>
+                <Field label="Número al que se pagó">{bonus.paidToNumber}</Field>
                 <Field label="Monto pagado">{money(bonus.paidAmount)}</Field>
               </div>
               {bonus.receiptUrl && (
@@ -438,8 +444,17 @@ const PayDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
+          {bonus && bonus.requestedYapeNumber && (
+            <div className="rounded border bg-muted/50 p-3 text-sm">
+              Pagar por{" "}
+              <span className="font-semibold">{walletLabel(bonus) || "billetera digital"}</span>{" "}
+              al{" "}
+              <span className="font-semibold">{bonus.requestedYapeNumber}</span>
+              {bonus.requestedYapeName ? ` (${bonus.requestedYapeName})` : ""}
+            </div>
+          )}
           <div>
-            <Label htmlFor="bonus-number">Número yapeado</Label>
+            <Label htmlFor="bonus-number">Número al que se pagó</Label>
             <Input
               id="bonus-number"
               inputMode="numeric"

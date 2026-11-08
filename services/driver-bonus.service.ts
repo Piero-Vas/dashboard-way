@@ -18,6 +18,9 @@ export interface DriverBonus {
   requestedAt?: string | null;
   requestedYapeNumber?: string | null;
   requestedYapeName?: string | null;
+  requestedWalletProvider?: "YAPE" | "PLIN" | "OTHER" | null;
+  requestedWalletProviderOther?: string | null;
+  requestedWalletLabel?: string | null;
   paidAt?: string | null;
   paidToNumber?: string | null;
   paidAmount?: number | string | null;
@@ -29,6 +32,18 @@ export interface DriverBonus {
     mobile?: string | null;
   } | null;
 }
+
+/** Entidad de pago solicitada (tolerante si el backend no envía los campos nuevos). */
+export const walletLabel = (b: DriverBonus): string => {
+  if (b.requestedWalletLabel) return b.requestedWalletLabel;
+  if (b.requestedWalletProvider === "YAPE") return "Yape";
+  if (b.requestedWalletProvider === "PLIN") return "Plin";
+  if (b.requestedWalletProvider === "OTHER")
+    return b.requestedWalletProviderOther || "Otros";
+  if (b.requestedWalletProviderOther) return b.requestedWalletProviderOther;
+  if (b.requestedYapeNumber) return "Yape";
+  return "";
+};
 
 export interface BonusListMeta {
   total: number;
